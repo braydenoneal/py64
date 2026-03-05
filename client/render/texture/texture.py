@@ -5,8 +5,5 @@ class Texture:
 
 
 TEXTURES = [
-    "stone",
-    "dirt",
-    "grass_side",
-    "grass_top",
+    "grass",
 ]

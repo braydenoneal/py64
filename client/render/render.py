@@ -8,6 +8,7 @@ from PIL.Image import Transpose
 from objloader import Obj
 from pyglm import glm
 
+from client.assets.models.read_model import get_materials
 from client.render.texture.texture import TEXTURES
 from server.world.player.player import Player
 from server.world.world import World
@@ -69,8 +70,10 @@ class Render:
         self.vao = self.get_vertex_array()
 
         self.textures = self.get_textures()
-        self.textures.filter = (self.ctx.NEAREST, self.ctx.NEAREST)
+        # self.textures.filter = (self.ctx.NEAREST, self.ctx.NEAREST)
         self.textures.use()
+
+        self.materials = get_materials(self.ctx, self.program)
 
     def get_vertex_array(self):
         return self.ctx.vertex_array(self.program, [
@@ -88,7 +91,8 @@ class Render:
         paths = [f"assets/textures/{texture}.png" for texture in TEXTURES]
         images = [Image.open(path).convert('RGBA').transpose(Transpose.FLIP_TOP_BOTTOM) for path in paths]
         image_data = np.array(images, np.uint8)
-        return self.ctx.texture_array((16, 16, len(TEXTURES)), 4, image_data.tobytes())
+
+        return self.ctx.texture_array((32, 32, len(TEXTURES)), 4, image_data.tobytes())
 
     def main_loop(self):
         self.ctx.clear()
