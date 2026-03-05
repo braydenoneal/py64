@@ -29,9 +29,9 @@ class Render:
 
                 uniform mat4 camera;
 
-                 in vec3 vertex;
-                 in vec3 in_normal;
-                 in vec2 in_uv;
+                in vec3 vertex;
+                in vec3 in_normal;
+                in vec2 in_uv;
 
                 out vec3 normal;
                 out vec2 uv;
@@ -47,6 +47,7 @@ class Render:
                 #version 330 core
 
                 uniform sampler2DArray Texture;
+                uniform vec3 light;
 
                 in vec3 normal;
                 in vec2 uv;
@@ -56,7 +57,7 @@ class Render:
                 void main() {
                     out_color = texture(Texture, vec3(uv, 0));
 
-                    float lum = dot(normalize(normal), normalize(vec3(0, 0.5, 0.5)));
+                    float lum = dot(normalize(normal), normalize(light));
                     out_color.rgb *= max(lum, 0.0) * 0.5 + 0.5;
                 }
             """,
@@ -95,6 +96,7 @@ class Render:
         self.ctx.clear()
 
         self.program['camera'].write(self.get_camera_matrix())
+        self.program['light'].write(glm.vec3(0, 1, 0))
         self.vao.render()
 
         pygame.display.flip()
