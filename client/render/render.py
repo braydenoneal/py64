@@ -64,8 +64,6 @@ class Render:
         )
 
         obj = Obj.open("assets/models/Kokiri Forest_out.obj")
-        print(obj.vert)
-
         self.vbo = self.ctx.buffer(obj.pack('vx vy vz nx ny nz tx ty'))
 
         self.vao = self.get_vertex_array()
