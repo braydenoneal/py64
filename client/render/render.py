@@ -5,6 +5,7 @@ import pygame
 from pyglm import glm
 
 from client.assets.models.read_model import get_materials
+from client.assets.models.read_model2 import get_materials2
 from server.world.player.player import Player
 from server.world.world import World
 
@@ -60,13 +61,23 @@ class Render:
         )
 
         self.materials = get_materials(self.ctx, self.program)
+        self.materials2 = get_materials2(self.ctx, self.program)
 
     def get_camera_matrix(self):
         perspective = glm.perspective(math.radians(70.0), self.ratio, 0.1, 1000.0)
+        translate1 = glm.translate(-self.player.get_position_vector())
         rotation = self.player.get_rotation_matrix()
-        translate = glm.translate(-self.player.get_position_vector())
+        translate = glm.translate(-glm.vec3(0, 16, 32))
 
-        return perspective * rotation * translate
+        return perspective * translate * rotation * translate1
+
+    def get_player_camera_matrix(self):
+        perspective = glm.perspective(math.radians(70.0), self.ratio, 0.1, 1000.0)
+        rotation = self.player.get_rotation_matrix()
+        translate = glm.translate(-glm.vec3(0, 16, 32))
+        y_rotate = glm.rotate(self.player.y_angle + math.radians(180), glm.vec3(0, 1, 0))
+
+        return perspective * translate * rotation * y_rotate
 
     def main_loop(self):
         self.ctx.clear()
@@ -75,6 +86,11 @@ class Render:
         self.program['light'].write(glm.vec3(0, 1, 0))
 
         for material in self.materials:
+            material.render()
+
+        self.program['camera'].write(self.get_player_camera_matrix())
+
+        for material in self.materials2:
             material.render()
 
         pygame.display.flip()

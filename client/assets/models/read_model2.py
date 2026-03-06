@@ -5,7 +5,7 @@ from PIL import Image
 from PIL.Image import Transpose
 from moderngl import Context, Program
 
-path = 'client/assets/models/Kokiri Forest.obj'
+path = 'client/assets/models/Link Adult.obj'
 
 Material = str
 Vertex = tuple[float, float, float]
@@ -13,10 +13,12 @@ Normal = tuple[float, float, float]
 UV = tuple[float, float]
 VertexIndex = int
 UVIndex = int
-Face = tuple[tuple[VertexIndex, UVIndex], tuple[VertexIndex, UVIndex], tuple[VertexIndex, UVIndex]]
+NormalIndex = int
+Face = tuple[tuple[VertexIndex, UVIndex, NormalIndex], tuple[VertexIndex, UVIndex, NormalIndex], tuple[VertexIndex, UVIndex, NormalIndex]]
 
 vertices: list[Vertex] = []
 uvs: list[UV] = []
+normals: list[Normal] = []
 materials: dict[Material, list[Face]] = {}
 
 with open(path) as file:
@@ -32,11 +34,15 @@ with open(path) as file:
 
         elif line.startswith("v "):
             items = line.split()[1:]
-            vertices.append((float(items[0]), float(items[1]), float(items[2])))
+            vertices.append((float(items[0]) / 1.5, float(items[1]) / 1.5, float(items[2]) / 1.5))
 
         elif line.startswith("vt "):
             items = line.split()[1:]
             uvs.append((float(items[0]), float(items[1])))
+
+        elif line.startswith("vn "):
+            items = line.split()[1:]
+            normals.append((float(items[0]), float(items[1]), float(items[2])))
 
         elif line.startswith("f "):
             items = line.split()[1:]
@@ -46,50 +52,26 @@ with open(path) as file:
             face2 = items[2].split('/')
 
             materials[material].append((
-                (int(face0[0]), int(face0[1])),
-                (int(face1[0]), int(face1[1])),
-                (int(face2[0]), int(face2[1])),
+                (int(face0[0]), int(face0[1]), int(face0[2])),
+                (int(face1[0]), int(face1[1]), int(face1[2])),
+                (int(face2[0]), int(face2[1]), int(face2[2])),
             ))
 
         line = file.readline()
 
-
-def get_normal(p1, p2, p3):
-    v1 = np.array(p2) - np.array(p1)
-    v2 = np.array(p3) - np.array(p1)
-
-    n = np.cross(v1, v2)
-
-    return n.tolist()
-
-
 VertexData = tuple[Vertex, Normal, UV]
 vertex_data: dict[Material, list[VertexData]] = {}
-
-CollisionFace = tuple[Vertex, Vertex, Vertex]
-collision_data: list[CollisionFace] = []
 
 for material, faces in materials.items():
     vertex_data[material] = []
 
     for face in faces:
-        normal = get_normal(*[vertices[vertex - 1] for vertex, _ in face])
-        collision_data.append((
-            vertices[face[0][0] - 1],
-            vertices[face[1][0] - 1],
-            vertices[face[2][0] - 1],
-        ))
-
-        for vertex, uv in face:
+        for vertex, uv, normal in face:
             vertex_data[material].append((
                 vertices[vertex - 1],
-                normal,
+                normals[normal - 1],
                 uvs[uv - 1],
             ))
-
-
-def get_collision_data():
-    return collision_data
 
 
 class MaterialData:
@@ -122,7 +104,7 @@ class MaterialData:
         self.vao.render()
 
 
-def get_materials(ctx: Context, program: Program) -> list[MaterialData]:
+def get_materials2(ctx: Context, program: Program) -> list[MaterialData]:
     material_datas: list[MaterialData] = []
 
     for material, vertex in vertex_data.items():
