@@ -9,6 +9,7 @@ path = 'client/assets/models/Kokiri Forest.obj'
 
 Material = str
 Vertex = tuple[float, float, float]
+Normal = tuple[float, float, float]
 UV = tuple[float, float]
 VertexIndex = int
 UVIndex = int
@@ -52,23 +53,31 @@ with open(path) as file:
 
         line = file.readline()
 
-# print(materials)
 
-VertexData = tuple[Vertex, UV]
+def get_normal(p1, p2, p3):
+    v1 = np.array(p2) - np.array(p1)
+    v2 = np.array(p3) - np.array(p1)
+
+    n = np.cross(v1, v2)
+
+    return n.tolist()
+
+
+VertexData = tuple[Vertex, Normal, UV]
 vertex_data: dict[Material, list[VertexData]] = {}
 
 for material, faces in materials.items():
     vertex_data[material] = []
 
     for face in faces:
+        normal = get_normal(*[vertices[vertex - 1] for vertex, uv in face])
+
         for vertex, uv in face:
             vertex_data[material].append((
                 vertices[vertex - 1],
+                normal,
                 uvs[uv - 1],
             ))
-
-
-# print(vertex_data)
 
 
 class MaterialData:
@@ -85,14 +94,14 @@ class MaterialData:
         self.vbo = self.ctx.buffer(self.vertex_data_to_bytes())
 
         self.vao = self.ctx.vertex_array(self.program, [
-            (self.vbo, '3f 2f', 'vertex', 'in_uv'),
+            (self.vbo, '3f 3f 2f', 'vertex', 'in_normal', 'in_uv'),
         ])
 
     def vertex_data_to_bytes(self) -> bytes:
         data = b''
 
-        for vertex, uv in self.vertex_data:
-            data += struct.pack('3f 2f', vertex[0], vertex[1], vertex[2], uv[0], uv[1])
+        for vertex, normal, uv in self.vertex_data:
+            data += struct.pack('3f 3f 2f', vertex[0], vertex[1], vertex[2], normal[0], normal[1], normal[2], uv[0], uv[1])
 
         return data
 

@@ -26,7 +26,7 @@ class Render:
                 uniform mat4 camera;
 
                 in vec3 vertex;
-                // in vec3 in_normal;
+                in vec3 in_normal;
                 in vec2 in_uv;
 
                 out vec3 normal;
@@ -35,8 +35,7 @@ class Render:
                 void main() {
                     gl_Position = camera * vec4(vertex / 10, 1);
 
-                    // normal = in_normal;
-                    normal = vec3(0, 1, 0);
+                    normal = in_normal;
                     uv = in_uv;
                 }
             """,
