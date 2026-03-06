@@ -5,7 +5,7 @@ from PIL import Image
 from PIL.Image import Transpose
 from moderngl import Context, Program
 
-path = 'Kokiri Forest.obj'
+path = 'client/assets/models/Kokiri Forest.obj'
 
 Material = str
 Vertex = tuple[float, float, float]
@@ -78,7 +78,7 @@ class MaterialData:
         self.texture_name = texture_name
         self.vertex_data = vertex_data
 
-        image = Image.open(f'assets/textures/{texture_name}.png').convert('RGBA').transpose(Transpose.FLIP_TOP_BOTTOM)
+        image = Image.open(f'client/assets/textures/{texture_name}.png').convert('RGBA').transpose(Transpose.FLIP_TOP_BOTTOM)
         image_data = np.array(image, np.uint8).tobytes()
         self.texture = self.ctx.texture(image.size, 4, image_data)
 
@@ -92,7 +92,7 @@ class MaterialData:
         data = b''
 
         for vertex, uv in self.vertex_data:
-            data += struct.pack('3f 2f', vertex, uv)
+            data += struct.pack('3f 2f', vertex[0], vertex[1], vertex[2], uv[0], uv[1])
 
         return data
 
