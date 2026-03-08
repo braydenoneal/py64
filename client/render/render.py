@@ -1,11 +1,11 @@
 import math
+import struct
 
 import moderngl
 import pygame
 from pyglm import glm
 
-from client.assets.models.read_model import get_materials
-from client.assets.models.read_model2 import get_materials2
+from client.render.model.model import Model
 from server.world.player.player import Player
 from server.world.world import World
 
@@ -25,34 +25,31 @@ class Render:
                 #version 330 core
 
                 uniform mat4 camera;
+                uniform float scale;
 
-                in vec3 vertex;
+                in vec3 in_vertex;
                 in vec3 in_normal;
-                in vec2 in_uv;
 
                 out vec3 normal;
-                out vec2 uv;
 
                 void main() {
-                    gl_Position = camera * vec4(vertex / 10, 1);
+                    gl_Position = camera * vec4(in_vertex * scale, 1);
 
                     normal = in_normal;
-                    uv = in_uv;
                 }
             """,
             fragment_shader="""
                 #version 330 core
 
-                uniform sampler2D Texture;
+                uniform vec3 color;
                 uniform vec3 light;
 
                 in vec3 normal;
-                in vec2 uv;
 
                 out vec4 out_color;
 
                 void main() {
-                    out_color = texture(Texture, uv);
+                    out_color = vec4(color, 1);
 
                     float lum = dot(normalize(normal), normalize(light));
                     out_color.rgb *= max(lum, 0.0) * 0.5 + 0.5;
@@ -60,21 +57,21 @@ class Render:
             """,
         )
 
-        self.materials = get_materials(self.ctx, self.program)
-        self.materials2 = get_materials2(self.ctx, self.program)
+        self.grid = Model(self.ctx, self.program, (0, 1, 0), 'assets/models/grid.obj')
+        self.sphere = Model(self.ctx, self.program, (1, 0, 0), 'assets/models/sphere.obj')
 
     def get_camera_matrix(self):
         perspective = glm.perspective(math.radians(70.0), self.ratio, 0.1, 1000.0)
         translate1 = glm.translate(-self.player.get_position_vector())
         rotation = self.player.get_rotation_matrix()
-        translate = glm.translate(-glm.vec3(0, 16, 32))
+        translate = glm.translate(-glm.vec3(0, 0, 16))
 
         return perspective * translate * rotation * translate1
 
     def get_player_camera_matrix(self):
         perspective = glm.perspective(math.radians(70.0), self.ratio, 0.1, 1000.0)
         rotation = self.player.get_rotation_matrix()
-        translate = glm.translate(-glm.vec3(0, 16, 32))
+        translate = glm.translate(-glm.vec3(0, 0, 16))
         y_rotate = glm.rotate(self.player.y_angle + math.radians(180), glm.vec3(0, 1, 0))
 
         return perspective * translate * rotation * y_rotate
@@ -82,15 +79,14 @@ class Render:
     def main_loop(self):
         self.ctx.clear()
 
-        self.program['camera'].write(self.get_camera_matrix())
         self.program['light'].write(glm.vec3(0, 1, 0))
 
-        for material in self.materials:
-            material.render()
+        self.program['camera'].write(self.get_camera_matrix())
+        self.program['scale'].write(struct.pack('f', 10))
+        self.grid.render()
 
         self.program['camera'].write(self.get_player_camera_matrix())
-
-        for material in self.materials2:
-            material.render()
+        self.program['scale'].write(struct.pack('f', 1))
+        self.sphere.render()
 
         pygame.display.flip()
