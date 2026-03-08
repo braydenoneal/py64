@@ -22,13 +22,14 @@ class Face:
     a: Vertex
     b: Vertex
     c: Vertex
+    collides: bool
 
     def __iter__(self):
         return iter(astuple(self))
 
 
 class Model:
-    def __init__(self, ctx: Context, program: Program, color: tuple[float, float, float], path: str):
+    def __init__(self, ctx: Context, program: Program, color: tuple[float, float, float], path: str, scale: float):
         self.ctx = ctx
         self.program = program
         self.color = color
@@ -42,9 +43,9 @@ class Model:
                 if line.startswith('v '):
                     items = line.split()[1:]
                     vertices.append((
-                        float(items[0]),
-                        float(items[1]),
-                        float(items[2]),
+                        float(items[0]) * scale,
+                        float(items[1]) * scale,
+                        float(items[2]) * scale,
                     ))
                 elif line.startswith('vn '):
                     items = line.split()[1:]
@@ -73,20 +74,29 @@ class Model:
                 Vertex(*vertices[av - 1], *normals[an - 1]),
                 Vertex(*vertices[bv - 1], *normals[bn - 1]),
                 Vertex(*vertices[cv - 1], *normals[cn - 1]),
+                False
             ))
 
-        self.bytes = b''
-
-        for a, b, c in self.faces:
-            self.bytes += struct.pack('3f 3f', *a)
-            self.bytes += struct.pack('3f 3f', *b)
-            self.bytes += struct.pack('3f 3f', *c)
-
+        self.bytes = self.get_bytes()
         self.vbo = self.ctx.buffer(self.bytes)
 
         self.vao = self.ctx.vertex_array(self.program, [
-            (self.vbo, '3f 3f', 'in_vertex', 'in_normal'),
+            (self.vbo, '3f 3f i', 'in_vertex', 'in_normal', 'in_collides'),
         ])
+
+    def get_bytes(self):
+        bytes_data = b''
+
+        for a, b, c, collides in self.faces:
+            bytes_data += struct.pack('3f 3f i', *a, collides)
+            bytes_data += struct.pack('3f 3f i', *b, collides)
+            bytes_data += struct.pack('3f 3f i', *c, collides)
+
+        return bytes_data
+
+    def update(self):
+        self.bytes = self.get_bytes()
+        self.vbo.write(self.bytes)
 
     def render(self):
         self.program['color'] = self.color

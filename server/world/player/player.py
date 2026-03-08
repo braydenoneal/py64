@@ -28,7 +28,6 @@ class Player:
         translate = glm.translate(y_rotate * move_vector)
 
         self.x, self.y, self.z = translate * self.get_position_vector()
-        # self.collides()
 
     def move_forward(self):
         self._move(glm.vec3(0, 0, -SPEED))
@@ -47,35 +46,3 @@ class Player:
 
     def move_down(self):
         self.y -= SPEED
-
-    # def collides(self) -> bool:
-    #     faces = get_collision_data()
-    #
-    #     for a, b, c, n in faces:
-    #         # Nearest to plane
-    #         player_point = self.get_position_vector()
-    #         plane_point = glm.vec3(*a)
-    #         plane_normal: glm.vec3 = glm.vec3(*n)
-    #
-    #         v: glm.vec3 = player_point - plane_point
-    #         dist: float = glm.dot(v, plane_normal)
-    #
-    #         nearest_point: glm.vec3 = player_point - dist * plane_normal
-    #
-    #         # Inside triangle
-    #         pa: glm.vec3 = glm.vec3(*a) - nearest_point
-    #         pb: glm.vec3 = glm.vec3(*b) - nearest_point
-    #         pc: glm.vec3 = glm.vec3(*c) - nearest_point
-    #
-    #         u: glm.vec3 = glm.cross(pb, pc)
-    #         v: glm.vec3 = glm.cross(pc, pa)
-    #         w: glm.vec3 = glm.cross(pa, pb)
-    #
-    #         if glm.dot(u, v) > 0 and glm.dot(u, w) > 0:
-    #             if glm.distance(player_point, nearest_point) < 2:
-    #                 print("COL")
-    #                 print(player_point)
-    #                 print(a, b, c)
-    #                 print(glm.distance(player_point, nearest_point))
-    #
-    #     return False
