@@ -9,6 +9,15 @@ from server.world.player.player import Player
 from server.world.world import World
 
 
+def closest_point_on_line(a: glm.vec3, b: glm.vec3, point: glm.vec3) -> glm.vec3:
+    ab = b - a
+
+    t = glm.dot(point - a, ab) / glm.dot(ab, ab)
+    t = glm.clamp(t, 0, 1)
+
+    return a + t * ab
+
+
 class Render:
     def __init__(self, ratio: float, world: World, player: Player):
         self.ratio = ratio
@@ -130,6 +139,33 @@ class Render:
             if glm.dot(u, v) > 0 and glm.dot(u, w) > 0:
                 if glm.distance(player_point, nearest_point) < 1:
                     next_collides = True
+
+                    if collides != next_collides:
+                        self.grid.faces[index].collides = next_collides
+                        update = True
+
+                    continue
+
+            # Outside triangle
+            ab = closest_point_on_line(a, b, nearest_point)
+            bc = closest_point_on_line(b, c, nearest_point)
+            ca = closest_point_on_line(c, a, nearest_point)
+
+            abd = glm.distance(ab, nearest_point)
+            bcd = glm.distance(bc, nearest_point)
+            cad = glm.distance(ca, nearest_point)
+
+            min_distance = min(min(abd, bcd), cad)
+
+            nearest_point = ab
+
+            if min_distance == bcd:
+                nearest_point = bc
+            elif min_distance == cad:
+                nearest_point = ca
+
+            if glm.distance(player_point, nearest_point) < 1:
+                next_collides = True
 
             if collides != next_collides:
                 self.grid.faces[index].collides = next_collides
