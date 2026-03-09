@@ -3,19 +3,67 @@ import math
 import moderngl
 import pygame
 from pyglm import glm
+from pyglm.glm import vec3
 
-from client.render.model.model import Model
+from client.render.model.model import Model, Face
 from server.world.player.player import Player
 from server.world.world import World
 
 
-def closest_point_on_line(a: glm.vec3, b: glm.vec3, point: glm.vec3) -> glm.vec3:
+def closest_point_on_line(a: vec3, b: vec3, point: vec3) -> vec3:
     ab = b - a
 
     t = glm.dot(point - a, ab) / glm.dot(ab, ab)
     t = glm.clamp(t, 0, 1)
 
     return a + t * ab
+
+
+def get_nearest_point_to_plane(normal: vec3, plane_point: vec3, point: vec3) -> vec3:
+    dist: float = glm.dot(point - plane_point, normal)
+    return point - dist * normal
+
+
+def get_nearest_point(face: Face, point: vec3) -> vec3:
+    a = vec3(face.a.vx, face.a.vy, face.a.vz)
+    b = vec3(face.b.vx, face.b.vy, face.b.vz)
+    c = vec3(face.c.vx, face.c.vy, face.c.vz)
+
+    # Nearest to plane
+    normal = vec3(face.a.nx, face.a.ny, face.a.nz)
+    nearest_point = get_nearest_point_to_plane(normal, a, point)
+
+    # Inside triangle
+    pa: vec3 = a - nearest_point
+    pb: vec3 = b - nearest_point
+    pc: vec3 = c - nearest_point
+
+    u: vec3 = glm.cross(pb, pc)
+    v: vec3 = glm.cross(pc, pa)
+    w: vec3 = glm.cross(pa, pb)
+
+    if glm.dot(u, v) > 0 and glm.dot(u, w) > 0:
+        return nearest_point
+
+    # Outside triangle
+    ab = closest_point_on_line(a, b, nearest_point)
+    bc = closest_point_on_line(b, c, nearest_point)
+    ca = closest_point_on_line(c, a, nearest_point)
+
+    abd = glm.distance(ab, nearest_point)
+    bcd = glm.distance(bc, nearest_point)
+    cad = glm.distance(ca, nearest_point)
+
+    min_distance = min(min(abd, bcd), cad)
+
+    nearest_point = ab
+
+    if min_distance == bcd:
+        nearest_point = bc
+    elif min_distance == cad:
+        nearest_point = ca
+
+    return nearest_point
 
 
 class Render:
@@ -79,15 +127,15 @@ class Render:
         perspective = glm.perspective(math.radians(70.0), self.ratio, 0.1, 1000.0)
         translate1 = glm.translate(-self.player.get_position_vector())
         rotation = self.player.get_rotation_matrix()
-        translate = glm.translate(-glm.vec3(0, 0, 16))
+        translate = glm.translate(-vec3(0, 0, 16))
 
         return perspective * translate * rotation * translate1
 
     def get_player_camera_matrix(self):
         perspective = glm.perspective(math.radians(70.0), self.ratio, 0.1, 1000.0)
         rotation = self.player.get_rotation_matrix()
-        translate = glm.translate(-glm.vec3(0, 0, 16))
-        y_rotate = glm.rotate(self.player.y_angle + math.radians(180), glm.vec3(0, 1, 0))
+        translate = glm.translate(-vec3(0, 0, 16))
+        y_rotate = glm.rotate(self.player.y_angle + math.radians(180), vec3(0, 1, 0))
 
         return perspective * translate * rotation * y_rotate
 
@@ -96,7 +144,7 @@ class Render:
 
         self.update_collision()
 
-        self.program['light'].write(glm.vec3(0, 1, 0))
+        self.program['light'].write(vec3(0, 1, 0))
 
         self.program['camera'].write(self.get_camera_matrix())
         self.grid.render()
@@ -107,65 +155,30 @@ class Render:
         pygame.display.flip()
 
     def update_collision(self):
+        # self.player.y -= 0.025
         update = False
 
         for index, face in enumerate(self.grid.faces):
-            a = glm.vec3(face.a.vx, face.a.vy, face.a.vz)
-            b = glm.vec3(face.b.vx, face.b.vy, face.b.vz)
-            c = glm.vec3(face.c.vx, face.c.vy, face.c.vz)
+            player_point = self.player.get_position_vector()
             collides = face.collides
             next_collides = False
 
-            # Nearest to plane
-            n = glm.vec3(face.a.nx, face.a.ny, face.a.nz)
-            player_point = self.player.get_position_vector()
-            plane_point = glm.vec3(*a)
-            plane_normal: glm.vec3 = glm.vec3(*n)
-
-            v: glm.vec3 = player_point - plane_point
-            dist: float = glm.dot(v, plane_normal)
-
-            nearest_point: glm.vec3 = player_point - dist * plane_normal
-
-            # Inside triangle
-            pa: glm.vec3 = glm.vec3(*a) - nearest_point
-            pb: glm.vec3 = glm.vec3(*b) - nearest_point
-            pc: glm.vec3 = glm.vec3(*c) - nearest_point
-
-            u: glm.vec3 = glm.cross(pb, pc)
-            v: glm.vec3 = glm.cross(pc, pa)
-            w: glm.vec3 = glm.cross(pa, pb)
-
-            if glm.dot(u, v) > 0 and glm.dot(u, w) > 0:
-                if glm.distance(player_point, nearest_point) < 1:
-                    next_collides = True
-
-                    if collides != next_collides:
-                        self.grid.faces[index].collides = next_collides
-                        update = True
-
-                    continue
-
-            # Outside triangle
-            ab = closest_point_on_line(a, b, nearest_point)
-            bc = closest_point_on_line(b, c, nearest_point)
-            ca = closest_point_on_line(c, a, nearest_point)
-
-            abd = glm.distance(ab, nearest_point)
-            bcd = glm.distance(bc, nearest_point)
-            cad = glm.distance(ca, nearest_point)
-
-            min_distance = min(min(abd, bcd), cad)
-
-            nearest_point = ab
-
-            if min_distance == bcd:
-                nearest_point = bc
-            elif min_distance == cad:
-                nearest_point = ca
+            nearest_point = get_nearest_point(face, player_point)
 
             if glm.distance(player_point, nearest_point) < 1:
                 next_collides = True
+
+                normal = vec3(face.a.nx, face.a.ny, face.a.nz)
+                plane_point = vec3(face.a.vx, face.a.vy, face.a.vz)
+
+                next_plane_point = get_nearest_point_to_plane(normal, plane_point, player_point)
+                prev_plane_point = get_nearest_point_to_plane(normal, plane_point, self.player.prev_pos)
+
+                next_pos: vec3 = self.player.prev_pos + next_plane_point - prev_plane_point
+
+                self.player.x = next_pos.x
+                self.player.y = next_pos.y
+                self.player.z = next_pos.z
 
             if collides != next_collides:
                 self.grid.faces[index].collides = next_collides

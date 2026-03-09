@@ -7,9 +7,10 @@ SPEED = 0.05
 
 class Player:
     def __init__(self):
-        self.x: float = 5
-        self.y: float = 0
+        self.x: float = 0
+        self.y: float = 3
         self.z: float = 0
+        self.prev_pos = self.get_position_vector()
 
         self.x_angle: float = 0
         self.y_angle: float = math.pi / 2
@@ -24,6 +25,8 @@ class Player:
         return x_rotate * y_rotate
 
     def _move(self, move_vector: glm.vec3):
+        self.prev_pos = self.get_position_vector()
+
         y_rotate = glm.rotate(self.y_angle, glm.vec3(0, 1, 0))
         translate = glm.translate(y_rotate * move_vector)
 
@@ -42,7 +45,9 @@ class Player:
         self._move(glm.vec3(SPEED, 0, 0))
 
     def move_up(self):
+        self.prev_pos = self.get_position_vector()
         self.y += SPEED
 
     def move_down(self):
+        self.prev_pos = self.get_position_vector()
         self.y -= SPEED
