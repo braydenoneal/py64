@@ -66,6 +66,10 @@ def get_nearest_point(face: Face, point: vec3) -> vec3:
     return nearest_point
 
 
+def get_collides(face: Face, point: vec3) -> bool:
+    return glm.distance(point, get_nearest_point(face, point)) < 1
+
+
 class Render:
     def __init__(self, ratio: float, world: World, player: Player):
         self.ratio = ratio
@@ -125,7 +129,7 @@ class Render:
 
     def get_camera_matrix(self):
         perspective = glm.perspective(math.radians(70.0), self.ratio, 0.1, 1000.0)
-        translate1 = glm.translate(-self.player.get_position_vector())
+        translate1 = glm.translate(-self.player.position)
         rotation = self.player.get_rotation_matrix()
         translate = glm.translate(-vec3(0, 0, 16))
 
@@ -154,35 +158,54 @@ class Render:
 
         pygame.display.flip()
 
-    def update_collision(self):
+    def update_collision(self, bounces: int = 0):
+        # self.player.position += self.player.direction
+        # return
+
         # self.player.y -= 0.025
         update = False
+        any_collides = False
 
         for index, face in enumerate(self.grid.faces):
-            player_point = self.player.get_position_vector()
+            # print(self.player.direction)
             collides = face.collides
             next_collides = False
+
+            player_point = self.player.position + self.player.direction
 
             nearest_point = get_nearest_point(face, player_point)
 
             if glm.distance(player_point, nearest_point) < 1:
                 next_collides = True
+                any_collides = True
 
-                normal = vec3(face.a.nx, face.a.ny, face.a.nz)
-                plane_point = vec3(face.a.vx, face.a.vy, face.a.vz)
+                if self.player.direction != vec3(0, 0, 0):
+                    self.player.position = nearest_point - glm.normalize(self.player.direction)  # * 1.001
+                    # print(self.player.position)
+                    # print(nearest_point)
+                    # print(self.player.direction)
+                    # print(glm.normalize(self.player.direction))
+                    # print(glm.distance(self.player.position, nearest_point))
+                    self.player.direction = vec3(0, 0, 0)
 
-                next_plane_point = get_nearest_point_to_plane(normal, plane_point, player_point)
-                prev_plane_point = get_nearest_point_to_plane(normal, plane_point, self.player.prev_pos)
-
-                next_pos: vec3 = self.player.prev_pos + next_plane_point - prev_plane_point
-
-                self.player.x = next_pos.x
-                self.player.y = next_pos.y
-                self.player.z = next_pos.z
+                # normal = vec3(face.a.nx, face.a.ny, face.a.nz)
+                # plane_point = vec3(face.a.vx, face.a.vy, face.a.vz)
+                #
+                # next_plane_point = get_nearest_point_to_plane(normal, plane_point, player_point)
+                # prev_plane_point = get_nearest_point_to_plane(normal, plane_point, self.player.prev_pos)
+                #
+                # self.player.position = self.player.prev_pos + next_plane_point - prev_plane_point
+                #
+                # if bounces < 10:
+                #     self.update_collision(bounces + 1)
 
             if collides != next_collides:
                 self.grid.faces[index].collides = next_collides
                 update = True
+
+        if not any_collides:
+            self.player.position += self.player.direction
+            self.player.direction = vec3(0, 0, 0)
 
         if update:
             self.grid.update()
