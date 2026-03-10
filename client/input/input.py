@@ -42,7 +42,7 @@ class Input:
                     self.player.move_down()
 
         # keys = pygame.key.get_pressed()
-
+        #
         # if keys[pygame.K_w]:
         #     self.player.move_forward()
         # if keys[pygame.K_s]:
