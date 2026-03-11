@@ -161,60 +161,60 @@ class Render:
     def update_collision(self, bounces: int = 0):
         update = False
         any_collides = False
-        step_size = 0.005
+        # step_size = 0.005
 
         for index, face in enumerate(self.grid.faces):
             next_collides = False
-            # player_point = self.player.position + self.player.direction
+            player_point = self.player.position + self.player.direction
 
-            step = 0
-            collision_point = vec3(self.player.position)
+            # step = 0
+            # collision_point = vec3(self.player.position)
+            #
+            # while step * step_size < glm.length(self.player.direction):
+            #     collision_point += glm.normalize(self.player.direction) * step_size
+            #
+            #     if get_collides(face, collision_point):
+            #         next_collides = True
+            #         any_collides = True
+            #         break
+            #
+            #     step += 1
+            #
+            # if next_collides:
+            #     self.player.position = collision_point - glm.normalize(self.player.direction) * step_size
+            #     break
+            #     # slide_normal = self.player.position - collision_point
+            #     # dest_to_plane = glm.distance(self.player.position + self.player.direction, )
 
-            while step * step_size < glm.length(self.player.direction):
-                collision_point += glm.normalize(self.player.direction) * step_size
+            if get_collides(face, player_point):
+                next_collides = True
+                any_collides = True
+                next_point = vec3(player_point)
 
-                if get_collides(face, collision_point):
-                    next_collides = True
-                    any_collides = True
-                    break
+                for _ in range(10):
+                    next_point -= self.player.direction / 10
 
-                step += 1
+                    if not get_collides(face, next_point):
+                        next_point -= self.player.direction / 10
+                        break
 
-            if next_collides:
-                self.player.position = collision_point - glm.normalize(self.player.direction) * step_size
-                break
-                # slide_normal = self.player.position - collision_point
-                # dest_to_plane = glm.distance(self.player.position + self.player.direction, )
+                normal = vec3(face.a.nx, face.a.ny, face.a.nz)
+                plane_point = vec3(face.a.vx, face.a.vy, face.a.vz)
 
-            # if get_collides(face, player_point):
-            #     next_collides = True
-            #     any_collides = True
-            #     next_point = vec3(player_point)
-            #
-            #     for _ in range(10):
-            #         next_point -= self.player.direction / 10
-            #
-            #         if not get_collides(face, next_point):
-            #             next_point -= self.player.direction / 10
-            #             break
-            #
-            #     normal = vec3(face.a.nx, face.a.ny, face.a.nz)
-            #     plane_point = vec3(face.a.vx, face.a.vy, face.a.vz)
-            #
-            #     next_plane_point = get_nearest_point_to_plane(normal, plane_point, player_point)
-            #     prev_plane_point = get_nearest_point_to_plane(normal, plane_point, self.player.position)
-            #
-            #     if glm.length(next_plane_point - prev_plane_point) > 0.005:
-            #         # self.player.direction = glm.normalize(next_plane_point - prev_plane_point) * glm.length(player_point - next_point)
-            #         destination = player_point - glm.distance(player_point, next_plane_point) * normal
-            #         self.player.direction = destination - self.player.position
-            #         self.player.position = next_point
-            #
-            #         # if glm.length(self.player.direction) < 0.005:
-            #         #     self.player.direction = vec3(0, 0, 0)
-            #
-            #         if bounces < 10:
-            #             self.update_collision(bounces + 1)
+                next_plane_point = get_nearest_point_to_plane(normal, plane_point, player_point)
+                prev_plane_point = get_nearest_point_to_plane(normal, plane_point, self.player.position)
+
+                if glm.length(next_plane_point - prev_plane_point) > 0.005:
+                    self.player.direction = glm.normalize(next_plane_point - prev_plane_point) * glm.length(player_point - next_point)
+                    # destination = player_point - glm.distance(player_point, next_plane_point) * normal
+                    # self.player.direction = destination - self.player.position
+                    self.player.position = next_point
+
+                    # if glm.length(self.player.direction) < 0.005:
+                    #     self.player.direction = vec3(0, 0, 0)
+
+                    if bounces < 10:
+                        self.update_collision(bounces + 1)
 
             if face.collides != next_collides:
                 self.grid.faces[index].collides = next_collides
