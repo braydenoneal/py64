@@ -105,19 +105,26 @@ class Render:
         if glm.length(self.player.direction) == 0:
             return
 
+        collisions: list[tuple[vec3, float]] = []
+
         for index, face in enumerate(self.grid.faces):
             next_collides = False
 
-            collides = collide(face.a, face.b, face.c, face.normal, self.player.position, self.player.direction)
+            collision = collide(face.a, face.b, face.c, face.normal, self.player.position, self.player.direction)
 
-            if collides:
-                self.player.position += (collides[1] / glm.length(self.player.direction)) * self.player.direction
-                self.player.direction = vec3(0)
+            if collision:
+                collisions.append(collision)
                 next_collides = True
 
             if face.collides != next_collides:
                 self.grid.faces[index].collides = next_collides
                 update = True
+
+        if len(collisions) > 0:
+            collisions.sort(key=lambda dist: dist[1])
+
+            self.player.position += (collisions[0][1] / glm.length(self.player.direction)) * self.player.direction
+            self.player.direction = vec3(0)
 
         self.player.position += self.player.direction
         self.player.direction = vec3(0)
