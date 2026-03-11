@@ -67,8 +67,6 @@ class Render:
 
         self.grid = Model(self.ctx, self.program, (0, 1, 0), 'assets/models/grid.obj', 10)
         self.sphere = Model(self.ctx, self.program, (1, 0, 0), 'assets/models/sphere.obj', 1)
-        # self.grid.faces[6].collides = True
-        # self.grid.update()
 
     def get_camera_matrix(self):
         perspective = glm.perspective(math.radians(70.0), self.ratio, 0.1, 1000.0)
@@ -107,13 +105,14 @@ class Render:
         if glm.length(self.player.direction) == 0:
             return
 
-        # for index, face in enumerate(self.grid.faces[6:7]):
         for index, face in enumerate(self.grid.faces):
             next_collides = False
 
             collides = collide(face.a, face.b, face.c, face.normal, self.player.position, self.player.direction)
 
             if collides:
+                self.player.position += (collides[1] / glm.length(self.player.direction)) * self.player.direction
+                self.player.direction = vec3(0)
                 next_collides = True
 
             if face.collides != next_collides:

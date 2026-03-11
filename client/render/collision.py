@@ -158,8 +158,8 @@ def collide(a: vec3, b: vec3, c: vec3, normal: vec3, base_point: vec3, velocity:
     intersect, time = get_vertex_intersection(c, time, base_point, velocity) or intersect, time
 
     # Check collision against the edges
-    intersect, time = get_line_intersection(a, b, time, base_point, velocity) or intersect, time
-    intersect, time = get_line_intersection(b, c, time, base_point, velocity) or intersect, time
-    intersect, time = get_line_intersection(c, a, time, base_point, velocity) or intersect, time
+    intersect, time = get_line_intersection(a, b, time, base_point, velocity) or (intersect, time)
+    intersect, time = get_line_intersection(b, c, time, base_point, velocity) or (intersect, time)
+    intersect, time = get_line_intersection(c, a, time, base_point, velocity) or (intersect, time)
 
     return (intersect, time * glm.length(velocity)) if intersect else None
