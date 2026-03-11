@@ -28,33 +28,33 @@ class Input:
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_q:
                     return False
-                # elif event.key == pygame.K_w:
-                #     self.player.move_forward()
-                # elif event.key == pygame.K_s:
-                #     self.player.move_backward()
-                # elif event.key == pygame.K_a:
-                #     self.player.move_left()
-                # elif event.key == pygame.K_d:
-                #     self.player.move_right()
-                # elif event.key == pygame.K_SPACE:
-                #     self.player.move_up()
-                # elif event.key == pygame.K_LSHIFT:
-                #     self.player.move_down()
+                elif event.key == pygame.K_w:
+                    self.player.move_forward()
+                elif event.key == pygame.K_s:
+                    self.player.move_backward()
+                elif event.key == pygame.K_a:
+                    self.player.move_left()
+                elif event.key == pygame.K_d:
+                    self.player.move_right()
+                elif event.key == pygame.K_SPACE:
+                    self.player.move_up()
+                elif event.key == pygame.K_LSHIFT:
+                    self.player.move_down()
 
-        keys = pygame.key.get_pressed()
-
-        if keys[pygame.K_w]:
-            self.player.move_forward()
-        if keys[pygame.K_s]:
-            self.player.move_backward()
-        if keys[pygame.K_a]:
-            self.player.move_left()
-        if keys[pygame.K_d]:
-            self.player.move_right()
-        if keys[pygame.K_SPACE]:
-            self.player.move_up()
-        if keys[pygame.K_LSHIFT]:
-            self.player.move_down()
+        # keys = pygame.key.get_pressed()
+        #
+        # if keys[pygame.K_w]:
+        #     self.player.move_forward()
+        # if keys[pygame.K_s]:
+        #     self.player.move_backward()
+        # if keys[pygame.K_a]:
+        #     self.player.move_left()
+        # if keys[pygame.K_d]:
+        #     self.player.move_right()
+        # if keys[pygame.K_SPACE]:
+        #     self.player.move_up()
+        # if keys[pygame.K_LSHIFT]:
+        #     self.player.move_down()
 
         pygame.event.set_grab(True)
 

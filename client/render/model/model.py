@@ -2,26 +2,15 @@ import struct
 from dataclasses import dataclass, astuple
 
 from moderngl import Context, Program
-
-
-@dataclass
-class Vertex:
-    vx: float
-    vy: float
-    vz: float
-    nx: float
-    ny: float
-    nz: float
-
-    def __iter__(self):
-        return iter(astuple(self))
+from pyglm.glm import vec3
 
 
 @dataclass
 class Face:
-    a: Vertex
-    b: Vertex
-    c: Vertex
+    a: vec3
+    b: vec3
+    c: vec3
+    normal: vec3
     collides: bool
 
     def __iter__(self):
@@ -71,9 +60,10 @@ class Model:
 
         for (av, an), (bv, bn), (cv, cn) in faces:
             self.faces.append(Face(
-                Vertex(*vertices[av - 1], *normals[an - 1]),
-                Vertex(*vertices[bv - 1], *normals[bn - 1]),
-                Vertex(*vertices[cv - 1], *normals[cn - 1]),
+                vec3(*vertices[av - 1]),
+                vec3(*vertices[bv - 1]),
+                vec3(*vertices[cv - 1]),
+                vec3(*normals[an - 1]),
                 False
             ))
 
@@ -87,10 +77,10 @@ class Model:
     def get_bytes(self):
         bytes_data = b''
 
-        for a, b, c, collides in self.faces:
-            bytes_data += struct.pack('3f 3f i', *a, collides)
-            bytes_data += struct.pack('3f 3f i', *b, collides)
-            bytes_data += struct.pack('3f 3f i', *c, collides)
+        for a, b, c, normal, collides in self.faces:
+            bytes_data += struct.pack('3f 3f i', *a, *normal, collides)
+            bytes_data += struct.pack('3f 3f i', *b, *normal, collides)
+            bytes_data += struct.pack('3f 3f i', *c, *normal, collides)
 
         return bytes_data
 
