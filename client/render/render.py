@@ -123,7 +123,7 @@ class Render:
         if len(collisions) > 0:
             collisions.sort(key=lambda dist: dist[1])
 
-            self.player.position += (collisions[0][1] / glm.length(self.player.direction)) * self.player.direction
+            self.player.position += (collisions[0][1] - 0.01 / glm.length(self.player.direction)) * self.player.direction
             self.player.direction = vec3(0)
 
         self.player.position += self.player.direction
