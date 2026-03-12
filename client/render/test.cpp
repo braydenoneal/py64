@@ -314,8 +314,7 @@ VECTOR CharacterEntity::collideWithWorld(const VECTOR& pos,const VECTOR& vel) {
         // plane will be unaffected by the fact that we
         // move slightly less than collision tells us)
         V.normalize();
-        collisionPackage->intersectionPoint -=
-        veryCloseDistance * V;
+        collisionPackage->intersectionPoint -= veryCloseDistance * V;
     }
     // Determine the sliding plane
     VECTOR slidePlaneOrigin = collisionPackage->intersectionPoint;
@@ -323,15 +322,11 @@ VECTOR CharacterEntity::collideWithWorld(const VECTOR& pos,const VECTOR& vel) {
     slidePlaneNormal.normalize();
     PLANE slidingPlane(slidePlaneOrigin,slidePlaneNormal);
     // Again, sorry about formatting.. but look carefully ;)
-    VECTOR newDestinationPoint = destinationPoint -
-    slidingPlane.signedDistanceTo(destinationPoint)*
-    slidePlaneNormal;
+    VECTOR newDestinationPoint = destinationPoint - slidingPlane.signedDistanceTo(destinationPoint)*slidePlaneNormal;
     // Generate the slide vector, which will become our new
     // velocity vector for the next iteration
-    VECTOR newVelocityVector = newDestinationPoint -
-    collisionPackage->intersectionPoint;
-    // Recurse:
-    // dont recurse if the new velocity is very small
+    VECTOR newVelocityVector = newDestinationPoint - collisionPackage->intersectionPoint;
+    // Recurse: dont recurse if the new velocity is very small
     if (newVelocityVector.length() < veryCloseDistance) {
         return newBasePoint;
     }
