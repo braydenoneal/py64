@@ -142,7 +142,7 @@ class Render:
 
         # Get all collisions
         for index, face in enumerate(self.grid.faces):
-            collision = collide(face.a, face.b, face.c, face.normal, self.player.position, self.player.direction)
+            collision = collide(face.a, face.b, face.c, face.normal, position, velocity)
 
             if collision:
                 collisions.append(collision)
@@ -180,5 +180,5 @@ class Render:
 
     def collide_and_slide(self):
         self.player.position = self.collide_with_world(self.player.position, self.player.direction)
-        # self.player.position = self.collide_with_world(self.player.position, vec3(0, -0.05, 0))
+        self.player.position = self.collide_with_world(self.player.position, vec3(0, -0.05, 0))
         self.player.direction = vec3(0)
