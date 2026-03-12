@@ -87,7 +87,6 @@ class Render:
     def main_loop(self):
         self.ctx.clear()
 
-        # self.update_collision()
         self.collide_and_slide()
 
         self.program['light'].write(vec3(0, 1, 0))
@@ -100,52 +99,25 @@ class Render:
 
         pygame.display.flip()
 
-    def update_collision(self):
-        update = False
-
-        if glm.length(self.player.direction) == 0:
-            return
-
-        collisions: list[tuple[vec3, float]] = []
-
-        for index, face in enumerate(self.grid.faces):
-            next_collides = False
-
-            collision = collide(face.a, face.b, face.c, face.normal, self.player.position, self.player.direction)
-
-            if collision:
-                collisions.append(collision)
-                next_collides = True
-
-            if face.collides != next_collides:
-                self.grid.faces[index].collides = next_collides
-                update = True
-
-        if len(collisions) > 0:
-            collisions.sort(key=lambda dist: dist[1])
-
-            self.player.position += (collisions[0][1] - 0.01 / glm.length(self.player.direction)) * self.player.direction
-            self.player.direction = vec3(0)
-
-        self.player.position += self.player.direction
-        self.player.direction = vec3(0)
-
-        if update:
-            self.grid.update()
-
     def collide_with_world(self, position: vec3, velocity: vec3, iterations: int = 0) -> vec3:
-        if iterations > 5:
+        if iterations > 5 or velocity == vec3(0):
             return position
 
         minimum_distance = 0.005
         collisions: list[tuple[vec3, float]] = []
+        update = False
 
         # Get all collisions
         for index, face in enumerate(self.grid.faces):
             collision = collide(face.a, face.b, face.c, face.normal, position, velocity)
 
             if collision:
+                update = True
+                self.grid.faces[index].collides = True
                 collisions.append(collision)
+
+        if update:
+            self.grid.update()
 
         # Move freely if there are no collisions
         if len(collisions) == 0:

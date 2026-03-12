@@ -187,8 +187,7 @@ void checkTriangle(CollisionPacket* colPackage, const VECTOR& p1,const VECTOR& p
             // Does the swept sphere collide against infinite edge?
             if (getLowestRoot(a,b,c, t, &newT)) {
                 // Check if intersection is within line segment:
-                float f=(edgeDotVelocity*newT-edgeDotBaseToVertex)/
-                edgeSquaredLength;
+                float f=(edgeDotVelocity*newT-edgeDotBaseToVertex)/edgeSquaredLength;
                 if (f >= 0.0 && f <= 1.0) {
                     // intersection took place within segment.
                     t = newT;
@@ -225,8 +224,7 @@ void checkTriangle(CollisionPacket* colPackage, const VECTOR& p1,const VECTOR& p
             b = edgeSquaredLength*(2*velocity.dot(baseToVertex))-2.0*edgeDotVelocity*edgeDotBaseToVertex;
             c = edgeSquaredLength*(1-baseToVertex.squaredLength())+edgeDotBaseToVertex*edgeDotBaseToVertex;
             if (getLowestRoot(a,b,c, t, &newT)) {
-                float f=(edgeDotVelocity*newT-edgeDotBaseToVertex)/
-                edgeSquaredLength;
+                float f=(edgeDotVelocity*newT-edgeDotBaseToVertex)/edgeSquaredLength;
                 if (f >= 0.0 && f <= 1.0) {
                     t = newT;
                     foundCollision = true;

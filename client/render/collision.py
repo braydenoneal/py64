@@ -4,11 +4,6 @@ from pyglm import glm
 from pyglm.glm import vec3
 
 
-def position_at_time(t: float, base_point: vec3, velocity: vec3) -> vec3:
-    # t ∈ [0, 1]
-    return base_point + t * velocity
-
-
 def signed_distance_to_plane(plane_normal: vec3, plane_origin: vec3, point: vec3) -> float:
     return (point @ plane_normal) - (
             plane_normal.x * plane_origin.x +
@@ -64,7 +59,7 @@ def is_point_in_triangle(a: vec3, b: vec3, c: vec3, normal: vec3, point: vec3) -
 
 def get_lowest_root(a: float, b: float, c: float, cutoff: float) -> float | None:
     # Check if a solution exists
-    determinant = b * b - 4 * a * c
+    determinant = b * b - 4.0 * a * c
 
     # If determinant is negative it means no solutions.
     if determinant < 0:
@@ -72,8 +67,8 @@ def get_lowest_root(a: float, b: float, c: float, cutoff: float) -> float | None
 
     # Calculate the two roots: (if determinant == 0 then x1==x2 but let’s disregard that slight optimization)
     sqrt_d = math.sqrt(determinant)
-    r1 = (-b - sqrt_d) / (2 * a)
-    r2 = (-b + sqrt_d) / (2 * a)
+    r1 = (-b - sqrt_d) / (2.0 * a)
+    r2 = (-b + sqrt_d) / (2.0 * a)
 
     # Sort so x1 <= x2
     if r1 > r2:
@@ -94,9 +89,9 @@ def get_lowest_root(a: float, b: float, c: float, cutoff: float) -> float | None
 
 
 def get_vertex_intersection(point: vec3, current_lowest_time: float, base_point: vec3, velocity: vec3) -> tuple[vec3, float] | None:
-    a = glm.dot(velocity, velocity)
-    b = 2 * (velocity @ (base_point - point))
-    c = glm.length(point - base_point) ** 2 - 1
+    a = velocity @ velocity
+    b = 2.0 * (velocity @ (base_point - point))
+    c = glm.length2(point - base_point) - 1.0
 
     return get_lowest_root(a, b, c, current_lowest_time)
 
@@ -105,16 +100,21 @@ def get_line_intersection(p1: vec3, p2: vec3, current_lowest_time: float, base_p
     edge = p2 - p1
     base_to_vertex = p1 - base_point
 
-    a = glm.length(edge) ** 2 * -(glm.length(velocity) ** 2) + (edge @ velocity) ** 2
-    b = glm.length(edge) ** 2 * 2 * (velocity @ base_to_vertex) - 2 * ((edge @ velocity) * (edge @ base_to_vertex))
-    c = glm.length(edge) ** 2 * (1 - glm.length(base_to_vertex) ** 2) + (edge @ base_to_vertex) ** 2
+    edge_squared_length = glm.length2(edge)
+    edge_dot_velocity = edge @ velocity
+    edge_dot_base_to_vertex = edge @ base_to_vertex
+    velocity_squared_length = glm.length2(velocity)
+
+    a = edge_squared_length * -velocity_squared_length + edge_dot_velocity * edge_dot_velocity
+    b = edge_squared_length * (2.0 * (velocity @ base_to_vertex)) - 2.0 * edge_dot_velocity * edge_dot_base_to_vertex
+    c = edge_squared_length * (1.0 - glm.length2(base_to_vertex)) + edge_dot_base_to_vertex * edge_dot_base_to_vertex
 
     x1 = get_lowest_root(a, b, c, current_lowest_time)
 
     if not x1:
         return None
 
-    line_segment_location = ((edge @ velocity) * x1 - (edge @ base_to_vertex)) / glm.length(edge) ** 2
+    line_segment_location = (edge_dot_velocity * x1 - edge_dot_base_to_vertex) / edge_squared_length
 
     return (p1 + line_segment_location * edge, x1) if 0 <= line_segment_location <= 1 else None
 
@@ -137,7 +137,7 @@ def collide(a: vec3, b: vec3, c: vec3, normal: vec3, base_point: vec3, velocity:
     # Get the time that the sphere starts and stops colliding
     time, embedded = get_plane_intersect_time(normal, a, base_point, velocity)
 
-    if not time:
+    if time is None:
         return None  # Does not collide
 
     if not embedded:
@@ -149,7 +149,7 @@ def collide(a: vec3, b: vec3, c: vec3, normal: vec3, base_point: vec3, velocity:
             # Collides with the inside of the triangle; plane_intersection_point is the collision point
             return plane_intersection_point, time * glm.length(velocity)
 
-    time = 1
+    time = 1.0
     intersect: vec3 | None = None
 
     # Check collision against the vertices
