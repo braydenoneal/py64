@@ -65,7 +65,7 @@ class Render:
             """,
         )
 
-        self.grid = Model(self.ctx, self.program, (0, 1, 0), 'assets/models/grid.obj', 10)
+        self.grid = Model(self.ctx, self.program, (0.5, 0.5, 0.5), 'assets/models/kokiri.obj', 0.04125)
         self.sphere = Model(self.ctx, self.program, (1, 0, 0), 'assets/models/sphere.obj', 1)
 
     def get_camera_matrix(self):
@@ -105,19 +105,13 @@ class Render:
 
         minimum_distance = 0.005
         collisions: list[tuple[vec3, float]] = []
-        update = False
 
         # Get all collisions
-        for index, face in enumerate(self.grid.faces):
+        for face in self.grid.faces:
             collision = collide(face.a, face.b, face.c, face.normal, position, velocity)
 
             if collision:
-                update = True
-                self.grid.faces[index].collides = True
                 collisions.append(collision)
-
-        if update:
-            self.grid.update()
 
         # Move freely if there are no collisions
         if len(collisions) == 0:
@@ -152,5 +146,5 @@ class Render:
 
     def collide_and_slide(self):
         self.player.position = self.collide_with_world(self.player.position, self.player.direction)
-        self.player.position = self.collide_with_world(self.player.position, vec3(0, -0.05, 0))
+        self.player.position = self.collide_with_world(self.player.position, vec3(0, -0.2, 0))
         self.player.direction = vec3(0)

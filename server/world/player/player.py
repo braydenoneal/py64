@@ -9,7 +9,7 @@ SPEED = 0.1
 
 class Player:
     def __init__(self):
-        self.position = vec3(0, 3, 0)
+        self.position = vec3(0, 10, 0)
         self.direction = vec3(0, 0, 0)
 
         self.x_angle: float = 0
@@ -40,7 +40,7 @@ class Player:
         self._move(vec3(SPEED, 0, 0))
 
     def move_up(self):
-        self.direction = vec3(0, SPEED, 0)
+        self.direction = vec3(0, SPEED * 4, 0)
 
     def move_down(self):
         self.direction = vec3(0, -SPEED, 0)

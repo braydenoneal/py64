@@ -62,7 +62,7 @@ def get_lowest_root(a: float, b: float, c: float, cutoff: float) -> float | None
     determinant = b * b - 4.0 * a * c
 
     # If determinant is negative it means no solutions.
-    if determinant < 0:
+    if determinant < 0 or a == 0.0:
         return None
 
     # Calculate the two roots: (if determinant == 0 then x1==x2 but let’s disregard that slight optimization)
