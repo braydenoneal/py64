@@ -155,6 +155,5 @@ class Render:
         return self.collide_with_world(base_point, next_velocity, gravity, iterations + 1)
 
     def collide_and_slide(self):
-        self.player.position = self.collide_with_world(self.player.position / self.player.scale, self.player.direction / self.player.scale) * self.player.scale
+        self.player.position = self.collide_with_world(self.player.position / self.player.scale, self.player.get_direction() / self.player.scale) * self.player.scale
         self.player.position = self.collide_with_world(self.player.position / self.player.scale, vec3(0, -0.2, 0) / self.player.scale, True) * self.player.scale
-        self.player.direction = vec3(0)
