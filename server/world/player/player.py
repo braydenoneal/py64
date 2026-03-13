@@ -10,8 +10,10 @@ SPEED = 0.2
 class Player:
     def __init__(self):
         self.position = vec3(0, 10, 0)
+        self.x_angle: float = 0
+        self.y_angle: float = math.pi / 2
         self.scale = vec3(0.75, 1.25, 0.75)
-
+        self.grounded = False
         self.jump_vector = vec3(0)
 
         self.movement = {
@@ -21,9 +23,6 @@ class Player:
             'right': False,
             'up': False,
         }
-
-        self.x_angle: float = 0
-        self.y_angle: float = math.pi / 2
 
     def get_rotation_matrix(self):
         x_rotate = glm.rotate(-self.x_angle, vec3(1, 0, 0))
@@ -64,6 +63,6 @@ class Player:
         return direction
 
     def jump(self):
-        if not self.movement['up']:
+        if self.grounded:
             self.movement['up'] = True
             self.jump_vector = vec3(0, SPEED * 4, 0)

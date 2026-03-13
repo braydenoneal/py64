@@ -141,6 +141,7 @@ class Render:
 
         # Only apply gravity on steep slopes
         if gravity and abs(glm.length(vec3(0, 1, 0) - slide_plane_normal)) < 0.5:
+            self.player.grounded = True
             return base_point
 
         destination_point -= signed_distance_to_plane(slide_plane_normal, slide_plane_origin, destination_point) * slide_plane_normal
@@ -155,5 +156,6 @@ class Render:
         return self.collide_with_world(base_point, next_velocity, gravity, iterations + 1)
 
     def collide_and_slide(self):
+        self.player.grounded = False
         self.player.position = self.collide_with_world(self.player.position / self.player.scale, self.player.get_direction() / self.player.scale) * self.player.scale
         self.player.position = self.collide_with_world(self.player.position / self.player.scale, vec3(0, -0.2, 0) / self.player.scale, True) * self.player.scale
