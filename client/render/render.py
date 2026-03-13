@@ -99,7 +99,7 @@ class Render:
 
         pygame.display.flip()
 
-    def collide_with_world(self, position: vec3, velocity: vec3, iterations: int = 0) -> vec3:
+    def collide_with_world(self, position: vec3, velocity: vec3, gravity: bool = False, iterations: int = 0) -> vec3:
         if iterations > 5 or velocity == vec3(0):
             return position
 
@@ -121,7 +121,7 @@ class Render:
         collisions.sort(key=lambda collision: collision[1])
         collision_point, collision_distance = collisions[0]
 
-        base_point = position
+        base_point = vec3(position)
         destination_point = position + velocity
 
         # Adjust to move very close to the collision point to avoid precision issues
@@ -133,6 +133,10 @@ class Render:
         slide_plane_origin = vec3(collision_point)
         slide_plane_normal = glm.normalize(base_point - collision_point)
 
+        # Only apply gravity on steep slopes
+        if gravity and abs(glm.length(vec3(0, 1, 0) - slide_plane_normal)) < 0.5:
+            return base_point
+
         destination_point -= signed_distance_to_plane(slide_plane_normal, slide_plane_origin, destination_point) * slide_plane_normal
 
         # Find the slide vector
@@ -142,9 +146,17 @@ class Render:
         if glm.length(next_velocity) < minimum_distance:
             return base_point
 
-        return self.collide_with_world(base_point, next_velocity, iterations + 1)
+        return self.collide_with_world(base_point, next_velocity, gravity, iterations + 1)
 
     def collide_and_slide(self):
         self.player.position = self.collide_with_world(self.player.position, self.player.direction)
-        self.player.position = self.collide_with_world(self.player.position, vec3(0, -0.2, 0))
+        self.player.position = self.collide_with_world(self.player.position, vec3(0, -0.2, 0), True)
+
+        # position = self.collide_with_world(self.player.position, self.player.direction)
+        # position = self.collide_with_world(position, vec3(0, -0.2, 0))
+        # difference = position - self.player.position
+        #
+        # if glm.length(difference) != 0.0:
+        #     self.player.position += glm.normalize(position - self.player.position) * .1
+
         self.player.direction = vec3(0)
