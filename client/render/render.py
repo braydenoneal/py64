@@ -7,6 +7,7 @@ from pyglm.glm import vec3
 
 from client.render.collision import collide, signed_distance_to_plane
 from client.render.model.model import Model
+from client.render.model.read_model import get_materials
 from server.world.player.player import Player
 from server.world.world import World
 
@@ -29,42 +30,39 @@ class Render:
 
                 in vec3 in_vertex;
                 in vec3 in_normal;
-                in int in_collides;
+                in vec2 in_uv;
 
                 out vec3 normal;
-                flat out int collides;
+                out vec2 uv;
 
                 void main() {
                     gl_Position = camera * vec4(in_vertex, 1);
 
                     normal = in_normal;
-                    collides = in_collides;
+                    uv = in_uv;
                 }
             """,
             fragment_shader="""
                 #version 330 core
 
-                uniform vec3 color;
+                uniform sampler2D Texture;
                 uniform vec3 light;
 
                 in vec3 normal;
-                flat in int collides;
+                in vec2 uv;
 
                 out vec4 out_color;
 
                 void main() {
-                    out_color = vec4(color, 1);
+                    out_color = texture(Texture, uv);
 
                     float lum = dot(normalize(normal), normalize(light));
                     out_color.rgb *= max(lum, 0.0) * 0.5 + 0.5;
-
-                    if (collides > 0) {
-                        out_color = vec4(1, 0, 0, 1);
-                    }
                 }
             """,
         )
 
+        self.materials = get_materials(self.ctx, self.program)
         self.grid = Model(self.ctx, self.program, (0.5, 0.5, 0.5), 'assets/models/kokiri.obj', vec3(0.04125))
         self.sphere = Model(self.ctx, self.program, (1, 0, 0), 'assets/models/sphere.obj', self.player.scale)
 
@@ -92,7 +90,9 @@ class Render:
         self.program['light'].write(vec3(-0.2, 0.55, 0.35))
 
         self.program['camera'].write(self.get_camera_matrix())
-        self.grid.render()
+
+        for material in self.materials:
+            material.render()
 
         self.program['camera'].write(self.get_player_camera_matrix())
         self.sphere.render()

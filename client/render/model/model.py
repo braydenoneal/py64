@@ -71,16 +71,16 @@ class Model:
         self.vbo = self.ctx.buffer(self.bytes)
 
         self.vao = self.ctx.vertex_array(self.program, [
-            (self.vbo, '3f 3f i', 'in_vertex', 'in_normal', 'in_collides'),
+            (self.vbo, '3f 3f 2f', 'in_vertex', 'in_normal', 'in_uv'),
         ])
 
     def get_bytes(self):
         bytes_data = b''
 
         for a, b, c, normal, collides in self.faces:
-            bytes_data += struct.pack('3f 3f i', *a, *normal, collides)
-            bytes_data += struct.pack('3f 3f i', *b, *normal, collides)
-            bytes_data += struct.pack('3f 3f i', *c, *normal, collides)
+            bytes_data += struct.pack('3f 3f 2f', *a, *normal, 0, 0)
+            bytes_data += struct.pack('3f 3f 2f', *b, *normal, 0, 0)
+            bytes_data += struct.pack('3f 3f 2f', *c, *normal, 0, 0)
 
         return bytes_data
 
@@ -89,5 +89,4 @@ class Model:
         self.vbo.write(self.bytes)
 
     def render(self):
-        self.program['color'] = self.color
         self.vao.render()
