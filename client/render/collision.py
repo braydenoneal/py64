@@ -93,7 +93,12 @@ def get_vertex_intersection(point: vec3, current_lowest_time: float, base_point:
     b = 2.0 * (velocity @ (base_point - point))
     c = glm.length2(point - base_point) - 1.0
 
-    return get_lowest_root(a, b, c, current_lowest_time)
+    x1 = get_lowest_root(a, b, c, current_lowest_time)
+
+    if not x1:
+        return None
+
+    return point, x1
 
 
 def get_line_intersection(p1: vec3, p2: vec3, current_lowest_time: float, base_point: vec3, velocity: vec3) -> tuple[vec3, float] | None:
@@ -153,9 +158,9 @@ def collide(a: vec3, b: vec3, c: vec3, normal: vec3, base_point: vec3, velocity:
     intersect: vec3 | None = None
 
     # Check collision against the vertices
-    intersect, time = get_vertex_intersection(a, time, base_point, velocity) or intersect, time
-    intersect, time = get_vertex_intersection(b, time, base_point, velocity) or intersect, time
-    intersect, time = get_vertex_intersection(c, time, base_point, velocity) or intersect, time
+    intersect, time = get_vertex_intersection(a, time, base_point, velocity) or (intersect, time)
+    intersect, time = get_vertex_intersection(b, time, base_point, velocity) or (intersect, time)
+    intersect, time = get_vertex_intersection(c, time, base_point, velocity) or (intersect, time)
 
     # Check collision against the edges
     intersect, time = get_line_intersection(a, b, time, base_point, velocity) or (intersect, time)
