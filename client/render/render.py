@@ -89,7 +89,7 @@ class Render:
 
         self.collide_and_slide()
 
-        self.program['light'].write(vec3(0, 1, 0))
+        self.program['light'].write(vec3(-0.2, 0.55, 0.35))
 
         self.program['camera'].write(self.get_camera_matrix())
         self.grid.render()

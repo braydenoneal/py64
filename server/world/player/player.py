@@ -40,16 +40,19 @@ class Player:
         direction = vec3(0, 0, 0)
 
         if self.movement['forward']:
-            direction += self.get_move(vec3(0, 0, -SPEED))
+            direction += self.get_move(vec3(0, 0, -1))
 
         if self.movement['backward']:
-            direction += self.get_move(vec3(0, 0, SPEED))
+            direction += self.get_move(vec3(0, 0, 1))
 
         if self.movement['left']:
-            direction += self.get_move(vec3(-SPEED, 0, 0))
+            direction += self.get_move(vec3(-1, 0, 0))
 
         if self.movement['right']:
-            direction += self.get_move(vec3(SPEED, 0, 0))
+            direction += self.get_move(vec3(1, 0, 0))
+
+        if glm.length(direction) != 0.0:
+            direction = glm.normalize(direction) * SPEED
 
         if self.movement['up']:
             self.jump_vector *= 0.9
