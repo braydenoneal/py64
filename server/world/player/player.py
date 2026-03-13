@@ -11,6 +11,7 @@ class Player:
     def __init__(self):
         self.position = vec3(0, 10, 0)
         self.direction = vec3(0, 0, 0)
+        self.scale = vec3(0.75, 1.25, 0.75)
 
         self.x_angle: float = 0
         self.y_angle: float = math.pi / 2

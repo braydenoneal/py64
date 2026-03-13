@@ -65,8 +65,8 @@ class Render:
             """,
         )
 
-        self.grid = Model(self.ctx, self.program, (0.5, 0.5, 0.5), 'assets/models/kokiri.obj', 0.04125)
-        self.sphere = Model(self.ctx, self.program, (1, 0, 0), 'assets/models/sphere.obj', 1)
+        self.grid = Model(self.ctx, self.program, (0.5, 0.5, 0.5), 'assets/models/kokiri.obj', vec3(0.04125))
+        self.sphere = Model(self.ctx, self.program, (1, 0, 0), 'assets/models/sphere.obj', self.player.scale)
 
     def get_camera_matrix(self):
         perspective = glm.perspective(math.radians(70.0), self.ratio, 0.1, 1000.0)
@@ -108,7 +108,13 @@ class Render:
 
         # Get all collisions
         for face in self.grid.faces:
-            collision = collide(face.a, face.b, face.c, face.normal, position, velocity)
+            # Convert vertices and normal to ellipsoid space
+            a = face.a / self.player.scale
+            b = face.b / self.player.scale
+            c = face.c / self.player.scale
+            normal = glm.normalize(glm.cross(b - a, c - a))
+
+            collision = collide(a, b, c, normal, position, velocity)
 
             if collision:
                 collisions.append(collision)
@@ -149,14 +155,6 @@ class Render:
         return self.collide_with_world(base_point, next_velocity, gravity, iterations + 1)
 
     def collide_and_slide(self):
-        self.player.position = self.collide_with_world(self.player.position, self.player.direction)
-        self.player.position = self.collide_with_world(self.player.position, vec3(0, -0.2, 0), True)
-
-        # position = self.collide_with_world(self.player.position, self.player.direction)
-        # position = self.collide_with_world(position, vec3(0, -0.2, 0))
-        # difference = position - self.player.position
-        #
-        # if glm.length(difference) != 0.0:
-        #     self.player.position += glm.normalize(position - self.player.position) * .1
-
+        self.player.position = self.collide_with_world(self.player.position / self.player.scale, self.player.direction / self.player.scale) * self.player.scale
+        self.player.position = self.collide_with_world(self.player.position / self.player.scale, vec3(0, -0.2, 0) / self.player.scale, True) * self.player.scale
         self.player.direction = vec3(0)

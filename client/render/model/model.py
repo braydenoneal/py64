@@ -18,7 +18,7 @@ class Face:
 
 
 class Model:
-    def __init__(self, ctx: Context, program: Program, color: tuple[float, float, float], path: str, scale: float):
+    def __init__(self, ctx: Context, program: Program, color: tuple[float, float, float], path: str, scale: vec3 = vec3(1)):
         self.ctx = ctx
         self.program = program
         self.color = color
@@ -32,9 +32,9 @@ class Model:
                 if line.startswith('v '):
                     items = line.split()[1:]
                     vertices.append((
-                        float(items[0]) * scale,
-                        float(items[1]) * scale,
-                        float(items[2]) * scale,
+                        float(items[0]) * scale.x,
+                        float(items[1]) * scale.y,
+                        float(items[2]) * scale.z,
                     ))
                 elif line.startswith('vn '):
                     items = line.split()[1:]
