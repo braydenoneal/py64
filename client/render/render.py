@@ -1,3 +1,4 @@
+import datetime
 import math
 
 import moderngl
@@ -66,9 +67,15 @@ class Render:
         self.grid = Model(self.ctx, self.program, (0.5, 0.5, 0.5), 'assets/models/kokiri.obj', vec3(0.04125))
         self.sphere = Model(self.ctx, self.program, (1, 0, 0), 'assets/models/sphere.obj', self.player.scale)
 
-    def get_camera_matrix(self):
+        self.updates_per_second = 60
+        self.frame_microseconds = 100000.0 / self.updates_per_second
+        self.last_update = datetime.datetime.now()
+        self.prev_position = vec3(self.player.position)
+        self.next_position = vec3(self.player.position)
+
+    def get_camera_matrix(self, position: vec3):
         perspective = glm.perspective(math.radians(70.0), self.ratio, 0.1, 1000.0)
-        translate1 = glm.translate(-self.player.position)
+        translate1 = glm.translate(-position)
         rotation = self.player.get_rotation_matrix()
         translate = glm.translate(-vec3(0, 0, 16))
 
@@ -85,11 +92,21 @@ class Render:
     def main_loop(self):
         self.ctx.clear()
 
-        self.collide_and_slide()
+        now = datetime.datetime.now()
+        since_last_update = (now - self.last_update).microseconds
+        render_position: vec3 = self.prev_position + (self.next_position - self.prev_position) * (since_last_update / self.frame_microseconds)
+
+        if since_last_update > self.frame_microseconds:
+            self.last_update = now
+            self.prev_position = vec3(self.player.position)
+            render_position = self.prev_position
+            self.player.process_jump_vector()
+            self.collide_and_slide()
+            self.next_position = vec3(self.player.position)
 
         self.program['light'].write(vec3(-0.2, 0.55, 0.35))
 
-        self.program['camera'].write(self.get_camera_matrix())
+        self.program['camera'].write(self.get_camera_matrix(render_position))
 
         for material in self.materials:
             material.render()
