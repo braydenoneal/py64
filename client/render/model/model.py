@@ -90,10 +90,16 @@ class Material:
                 self.texture = self.ctx.texture(image.size, 4, image_data)
                 self.texture.filter = (moderngl.NEAREST, moderngl.NEAREST)
             except:
-                image = Image.open(f'assets/textures/missing.png').convert('RGBA').transpose(Transpose.FLIP_TOP_BOTTOM)
-                image_data = np.array(image, np.uint8).tobytes()
-                self.texture = self.ctx.texture(image.size, 4, image_data)
-                self.texture.filter = (moderngl.NEAREST, moderngl.NEAREST)
+                try:
+                    image = Image.open(f'assets/textures/{self.material_dict["texture"]["name"]}.png').convert('RGBA').transpose(Transpose.FLIP_TOP_BOTTOM)
+                    image_data = np.array(image, np.uint8).tobytes()
+                    self.texture = self.ctx.texture(image.size, 4, image_data)
+                    self.texture.filter = (moderngl.NEAREST, moderngl.NEAREST)
+                except:
+                    image = Image.open(f'assets/textures/missing.png').convert('RGBA').transpose(Transpose.FLIP_TOP_BOTTOM)
+                    image_data = np.array(image, np.uint8).tobytes()
+                    self.texture = self.ctx.texture(image.size, 4, image_data)
+                    self.texture.filter = (moderngl.NEAREST, moderngl.NEAREST)
 
         self.bytes = self.get_bytes()
         self.vbo = self.ctx.buffer(self.bytes)
