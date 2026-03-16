@@ -3,7 +3,7 @@ import math
 from pyglm import glm
 from pyglm.glm import vec3
 
-SPEED = 0.1
+SPEED = 0.5
 
 
 class Player:
@@ -21,6 +21,7 @@ class Player:
             'left': False,
             'right': False,
             'up': False,
+            'down': False,
         }
 
     def get_rotation_matrix(self):
@@ -50,23 +51,13 @@ class Player:
         if self.movement['right']:
             direction += self.get_move(vec3(1, 0, 0))
 
+        if self.movement['up']:
+            direction += self.get_move(vec3(0, 1, 0))
+
+        if self.movement['down']:
+            direction += self.get_move(vec3(0, -1, 0))
+
         if glm.length(direction) != 0.0:
             direction = glm.normalize(direction) * SPEED
 
-        if self.movement['up']:
-            direction += self.jump_vector
-
         return direction
-
-    def process_jump_vector(self):
-        if self.movement['up']:
-            self.jump_vector *= 0.95
-
-            if self.jump_vector.y < 0.01:
-                self.movement['up'] = False
-                self.jump_vector = vec3(0)
-
-    def jump(self):
-        if self.grounded:
-            self.movement['up'] = True
-            self.jump_vector = vec3(0, 0.5, 0)

@@ -1,7 +1,13 @@
+import json
 import struct
 from dataclasses import dataclass, astuple
+from typing import Any
 
-from moderngl import Context, Program
+import moderngl
+import numpy as np
+from PIL import Image
+from PIL.Image import Transpose
+from moderngl import Context, Program, Texture
 from pyglm.glm import vec3
 
 
@@ -11,76 +17,140 @@ class Face:
     b: vec3
     c: vec3
     normal: vec3
-    collides: bool
+    one_sided: bool
 
     def __iter__(self):
         return iter(astuple(self))
 
 
 class Model:
-    def __init__(self, ctx: Context, program: Program, color: tuple[float, float, float], path: str, scale: vec3 = vec3(1)):
+    def __init__(self, ctx: Context, program: Program, path: str):
         self.ctx = ctx
         self.program = program
-        self.color = color
 
-        vertices: list[tuple[float, float, float]] = []
-        normals: list[tuple[float, float, float]] = []
-        faces: list[tuple[tuple[int, int], tuple[int, int], tuple[int, int]]] = []
+        materials_dict: dict[str, Any] = {}
 
         with open(path) as file:
-            for line in file:
-                if line.startswith('v '):
-                    items = line.split()[1:]
-                    vertices.append((
-                        float(items[0]) * scale.x,
-                        float(items[1]) * scale.y,
-                        float(items[2]) * scale.z,
-                    ))
-                elif line.startswith('vn '):
-                    items = line.split()[1:]
-                    normals.append((
-                        float(items[0]),
-                        float(items[1]),
-                        float(items[2]),
-                    ))
-                elif line.startswith('f '):
-                    items = line.split()[1:]
+            materials_dict = json.load(file)
 
-                    face0 = items[0].split('//')
-                    face1 = items[1].split('//')
-                    face2 = items[2].split('//')
+        self.materials: list[Material] = []
 
-                    faces.append((
-                        (int(face0[0]), int(face0[1])),
-                        (int(face1[0]), int(face1[1])),
-                        (int(face2[0]), int(face2[1])),
-                    ))
+        for material_dict in materials_dict.values():
+            self.materials.append(Material(ctx, program, material_dict))
 
-        self.faces: list[Face] = []
+        self.collision_faces: list[Face] = []
 
-        for (av, an), (bv, bn), (cv, cn) in faces:
-            self.faces.append(Face(
-                vec3(*vertices[av - 1]),
-                vec3(*vertices[bv - 1]),
-                vec3(*vertices[cv - 1]),
-                vec3(*normals[an - 1]),
-                False
-            ))
+        for material in materials_dict.values():
+            for face in material['faces']:
+                self.collision_faces.append(Face(
+                    vec3(
+                        face['a']['x'] * 42,
+                        face['a']['y'] * 42,
+                        face['a']['z'] * 42,
+                    ),
+                    vec3(
+                        face['b']['x'] * 42,
+                        face['b']['y'] * 42,
+                        face['b']['z'] * 42,
+                    ),
+                    vec3(
+                        face['c']['x'] * 42,
+                        face['c']['y'] * 42,
+                        face['c']['z'] * 42,
+                    ),
+                    vec3(
+                        face['normal']['x'],
+                        face['normal']['y'],
+                        face['normal']['z'],
+                    ),
+                    material['backface_culling'],
+                ))
+
+    def update(self):
+        for material in self.materials:
+            material.update()
+
+    def render(self):
+        for material in self.materials:
+            material.render()
+
+
+class Material:
+    def __init__(self, ctx: Context, program: Program, material_dict: dict[str, Any]):
+        self.ctx = ctx
+        self.program = program
+        self.material_dict = material_dict
+
+        self.texture: Texture | None = None
+
+        if 'texture' in self.material_dict.keys():
+            try:
+                image = Image.open(f'assets/textures/{self.material_dict["texture"]["name"]}.bmp').convert('RGBA').transpose(Transpose.FLIP_TOP_BOTTOM)
+                image_data = np.array(image, np.uint8).tobytes()
+                self.texture = self.ctx.texture(image.size, 4, image_data)
+            except:
+                image = Image.open(f'assets/textures/missing.png').convert('RGBA').transpose(Transpose.FLIP_TOP_BOTTOM)
+                image_data = np.array(image, np.uint8).tobytes()
+                self.texture = self.ctx.texture(image.size, 4, image_data)
 
         self.bytes = self.get_bytes()
         self.vbo = self.ctx.buffer(self.bytes)
 
         self.vao = self.ctx.vertex_array(self.program, [
-            (self.vbo, '3f 3f 2f', 'in_vertex', 'in_normal', 'in_uv'),
+            (self.vbo, '3f 3f 2f 4f', 'in_vertex', 'in_normal', 'in_uv', 'in_color'),
         ])
 
     def get_bytes(self):
         bytes_data = b''
 
-        for a, b, c, normal, collides in self.faces:
-            bytes_data += struct.pack('3f 3f 2f', *a, *normal, 0, 0)
-            bytes_data += struct.pack('3f 3f 2f', *b, *normal, 0, 0)
-            bytes_data += struct.pack('3f 3f 2f', *c, *normal, 0, 0)
+        for face in self.material_dict['faces']:
+            bytes_data += struct.pack(
+                '3f 3f 2f 4f',
+                face['a']['x'] * 42,
+                face['a']['y'] * 42,
+                face['a']['z'] * 42,
+                face['normal']['x'],
+                face['normal']['y'],
+                face['normal']['z'],
+                face['a']['u'] if 'texture' in self.material_dict.keys() else 0.0,
+                face['a']['v'] if 'texture' in self.material_dict.keys() else 0.0,
+                face['a']['color']['r'] if self.material_dict['vertex_colors'] else 1.0,
+                face['a']['color']['g'] if self.material_dict['vertex_colors'] else 1.0,
+                face['a']['color']['b'] if self.material_dict['vertex_colors'] else 1.0,
+                face['a']['color']['a'] if self.material_dict['vertex_colors'] and 'transparency' in self.material_dict.keys() else 1.0,
+            )
+
+            bytes_data += struct.pack(
+                '3f 3f 2f 4f',
+                face['b']['x'] * 42,
+                face['b']['y'] * 42,
+                face['b']['z'] * 42,
+                face['normal']['x'],
+                face['normal']['y'],
+                face['normal']['z'],
+                face['b']['u'] if 'texture' in self.material_dict.keys() else 0.0,
+                face['b']['v'] if 'texture' in self.material_dict.keys() else 0.0,
+                face['b']['color']['r'] if self.material_dict['vertex_colors'] else 1.0,
+                face['b']['color']['g'] if self.material_dict['vertex_colors'] else 1.0,
+                face['b']['color']['b'] if self.material_dict['vertex_colors'] else 1.0,
+                face['b']['color']['a'] if self.material_dict['vertex_colors'] and 'transparency' in self.material_dict.keys() else 1.0,
+            )
+
+            bytes_data += struct.pack(
+                '3f 3f 2f 4f',
+                face['c']['x'] * 42,
+                face['c']['y'] * 42,
+                face['c']['z'] * 42,
+                face['normal']['x'],
+                face['normal']['y'],
+                face['normal']['z'],
+                face['c']['u'] if 'texture' in self.material_dict.keys() else 0.0,
+                face['c']['v'] if 'texture' in self.material_dict.keys() else 0.0,
+                face['c']['color']['r'] if self.material_dict['vertex_colors'] else 1.0,
+                face['c']['color']['g'] if self.material_dict['vertex_colors'] else 1.0,
+                face['c']['color']['b'] if self.material_dict['vertex_colors'] else 1.0,
+                face['c']['color']['a'] if self.material_dict['vertex_colors'] and 'transparency' in self.material_dict.keys() else 1.0,
+            )
 
         return bytes_data
 
@@ -89,4 +159,12 @@ class Model:
         self.vbo.write(self.bytes)
 
     def render(self):
+        if self.texture:
+            self.texture.use()
+
+        if self.material_dict['backface_culling']:
+            self.ctx.enable(moderngl.CULL_FACE)
+        else:
+            self.ctx.disable(moderngl.CULL_FACE)
+
         self.vao.render()
