@@ -22,49 +22,8 @@ class Render:
         self.ctx.enable(moderngl.CULL_FACE)
 
         self.program = self.ctx.program(
-            vertex_shader="""
-                #version 330 core
-
-                uniform mat4 camera;
-
-                in vec3 in_vertex;
-                in vec3 in_normal;
-                in vec2 in_uv;
-                in vec4 in_color;
-
-                out vec3 normal;
-                out vec2 uv;
-                out vec4 color;
-
-                void main() {
-                    gl_Position = camera * vec4(in_vertex, 1);
-
-                    normal = in_normal;
-                    uv = in_uv;
-                    color = in_color;
-                }
-            """,
-            fragment_shader="""
-                #version 330 core
-
-                uniform sampler2D Texture;
-                uniform vec3 light;
-
-                in vec3 normal;
-                in vec2 uv;
-                in vec4 color;
-
-                out vec4 out_color;
-
-                void main() {
-                    out_color = texture(Texture, uv);
-
-                    float lum = dot(normalize(normal), normalize(light));
-                    out_color.rgb *= max(lum, 0.0) * 0.5 + 0.5;
-
-                    out_color.rgb *= color;
-                }
-            """,
+            vertex_shader=open('assets/shaders/main/vertex.glsl', 'r').read(),
+            fragment_shader=open('assets/shaders/main/fragment.glsl', 'r').read(),
         )
 
         self.forest = Model(self.ctx, self.program, 'assets/models/forest.json')

@@ -88,10 +88,12 @@ class Material:
                 image = Image.open(f'assets/textures/{self.material_dict["texture"]["name"]}.bmp').convert('RGBA').transpose(Transpose.FLIP_TOP_BOTTOM)
                 image_data = np.array(image, np.uint8).tobytes()
                 self.texture = self.ctx.texture(image.size, 4, image_data)
+                self.texture.filter = (moderngl.NEAREST, moderngl.NEAREST)
             except:
                 image = Image.open(f'assets/textures/missing.png').convert('RGBA').transpose(Transpose.FLIP_TOP_BOTTOM)
                 image_data = np.array(image, np.uint8).tobytes()
                 self.texture = self.ctx.texture(image.size, 4, image_data)
+                self.texture.filter = (moderngl.NEAREST, moderngl.NEAREST)
 
         self.bytes = self.get_bytes()
         self.vbo = self.ctx.buffer(self.bytes)
@@ -159,8 +161,15 @@ class Material:
         self.vbo.write(self.bytes)
 
     def render(self):
+        self.program['bounds'] = (0, 0)
+
         if self.texture:
             self.texture.use()
+
+            self.program['bounds'] = (
+                ('repeat', 'extend', 'clip', 'mirror').index(self.material_dict['texture']['bounds']['x']),
+                ('repeat', 'extend', 'clip', 'mirror').index(self.material_dict['texture']['bounds']['y']),
+            )
 
         if self.material_dict['backface_culling']:
             self.ctx.enable(moderngl.CULL_FACE)
