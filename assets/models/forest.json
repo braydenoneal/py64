@@ -19114,7 +19114,7 @@
   },
   "path": {
     "texture": {
-      "name": "path.png",
+      "name": "path",
       "bounds": {
         "x": "repeat",
         "y": "repeat"

@@ -182,4 +182,10 @@ class Material:
         else:
             self.ctx.disable(moderngl.CULL_FACE)
 
+        self.program['overlay_color'] = vec3(1)
+
+        if 'overlay_color' in self.material_dict.keys():
+            overlay_color = self.material_dict['overlay_color']
+            self.program['overlay_color'] = vec3(overlay_color['r'], overlay_color['g'], overlay_color['b'])
+
         self.vao.render()

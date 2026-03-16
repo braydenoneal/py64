@@ -3,6 +3,7 @@
 uniform vec3 light;
 uniform sampler2D Texture;
 uniform ivec2 bounds;
+uniform vec3 overlay_color;
 
 in vec3 normal;
 in vec2 uv;
@@ -39,12 +40,10 @@ vec4 filter_texture(sampler2D sampler, vec2 uv) {
     float side = step(0.0, pixel_position.x - pixel_position.y);
     vec2 offset = vec2(side, 1.0 - side) * pixel_size;
 
-    vec4 col =
+    return
     texture(sampler, wrap_uv(uv)) * (1.0 - max(pixel_position.x, pixel_position.y)) +
     texture(sampler, wrap_uv(uv + pixel_size)) * min(pixel_position.x, pixel_position.y) +
     texture(sampler, wrap_uv(uv + offset)) * abs(pixel_position.x - pixel_position.y);
-
-    return col;
 }
 
 void main() {
@@ -54,4 +53,5 @@ void main() {
     out_color.rgb *= max(luminance, 0.0) * 0.5 + 0.5;
 
     out_color.rgba *= color;
+    out_color.rgb *= overlay_color;
 }
