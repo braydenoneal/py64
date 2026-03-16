@@ -40,14 +40,6 @@ class Render:
         rotation = self.player.get_rotation_matrix()
         return perspective * rotation * translate1
 
-    def get_player_camera_matrix(self):
-        perspective = glm.perspective(math.radians(70.0), self.ratio, 0.1, 1000.0)
-        rotation = self.player.get_rotation_matrix()
-        translate = glm.translate(-vec3(0, 0, 16))
-        y_rotate = glm.rotate(self.player.y_angle + math.radians(180), vec3(0, 1, 0))
-
-        return perspective * translate * rotation * y_rotate
-
     def main_loop(self):
         self.ctx.clear()
 
