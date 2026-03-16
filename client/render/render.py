@@ -8,7 +8,7 @@ from pyglm.glm import vec3
 
 from client.render.collision import collide, signed_distance_to_plane
 from client.render.model.model import Model
-from client.render.model.read_model import get_materials
+from client.render.model.model2 import Model2
 from server.world.player.player import Player
 from server.world.world import World
 
@@ -63,7 +63,62 @@ class Render:
             """,
         )
 
-        self.materials = get_materials(self.ctx, self.program)
+        self.program2 = self.ctx.program(
+            vertex_shader="""
+                #version 330 core
+
+                uniform mat4 camera;
+
+                in vec3 in_vertex;
+                in vec3 in_normal;
+                in vec2 in_uv;
+                in vec4 in_color;
+
+                out vec3 normal;
+                out vec2 uv;
+                out vec4 color;
+
+                void main() {
+                    gl_Position = camera * vec4(in_vertex, 1);
+
+                    normal = in_normal;
+                    uv = in_uv;
+                    color = in_color;
+                }
+            """,
+            fragment_shader="""
+                #version 330 core
+
+                uniform sampler2D Texture;
+                uniform vec3 light;
+
+                in vec3 normal;
+                in vec2 uv;
+                in vec4 color;
+
+                out vec4 out_color;
+
+                void main() {
+                    float u = mod(uv.x, 2);
+                    if (u >= 1) {
+                        u = 2 - u;
+                    }
+                    float v = mod(uv.y, 2);
+                    if (v >= 1) {
+                        v = 2 - v;
+                    }
+                    out_color = texture(Texture, vec2(u, v));
+
+                    float lum = dot(normalize(normal), normalize(light));
+                    out_color.rgb *= max(lum, 0.0) * 0.5 + 0.5;
+
+                    out_color.rgb *= color;
+                }
+            """,
+        )
+
+        self.forest = Model2(self.ctx, self.program2, 'assets/models/forest.json')
+
         self.grid = Model(self.ctx, self.program, (0.5, 0.5, 0.5), 'assets/models/kokiri.obj', vec3(0.04125))
         self.sphere = Model(self.ctx, self.program, (1, 0, 0), 'assets/models/sphere.obj', self.player.scale)
 
@@ -104,13 +159,12 @@ class Render:
             self.collide_and_slide()
             self.next_position = vec3(self.player.position)
 
+        self.program2['light'].write(vec3(-0.2, 0.55, 0.35))
+        self.program2['camera'].write(self.get_camera_matrix(render_position))
+
+        self.forest.render()
+
         self.program['light'].write(vec3(-0.2, 0.55, 0.35))
-
-        self.program['camera'].write(self.get_camera_matrix(render_position))
-
-        for material in self.materials:
-            material.render()
-
         self.program['camera'].write(self.get_player_camera_matrix())
         self.sphere.render()
 
@@ -124,14 +178,14 @@ class Render:
         collisions: list[tuple[vec3, float]] = []
 
         # Get all collisions
-        for face in self.grid.faces:
+        for face in self.forest.collision_faces:
             # Convert vertices and normal to ellipsoid space
             a = face.a / self.player.scale
             b = face.b / self.player.scale
             c = face.c / self.player.scale
             normal = glm.normalize(glm.cross(b - a, c - a))
 
-            collision = collide(a, b, c, normal, position, velocity)
+            collision = collide(a, b, c, normal, position, velocity, face.one_sided)
 
             if collision:
                 collisions.append(collision)

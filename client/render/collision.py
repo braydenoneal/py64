@@ -124,7 +124,7 @@ def get_line_intersection(p1: vec3, p2: vec3, current_lowest_time: float, base_p
     return (p1 + line_segment_location * edge, x1) if 0 <= line_segment_location <= 1 else None
 
 
-def collide(a: vec3, b: vec3, c: vec3, normal: vec3, base_point: vec3, velocity: vec3) -> tuple[vec3, float] | None:
+def collide(a: vec3, b: vec3, c: vec3, normal: vec3, base_point: vec3, velocity: vec3, one_sided: bool) -> tuple[vec3, float] | None:
     """
     Uses:
     - Sphere starting point
@@ -136,7 +136,7 @@ def collide(a: vec3, b: vec3, c: vec3, normal: vec3, base_point: vec3, velocity:
     - The position where the sphere hits the geometry.
     - The distance along the velocity vector that the sphere must travel before the collision occurs.
     """
-    if normal @ glm.normalize(velocity) > 0:
+    if one_sided and normal @ glm.normalize(velocity) > 0:
         return None  # Not facing the triangle
 
     # Get the time that the sphere starts and stops colliding
