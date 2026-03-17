@@ -25,7 +25,7 @@ class Face:
 
 
 class Model:
-    def __init__(self, ctx: Context, program: Program, path: str):
+    def __init__(self, ctx: Context, program: Program, path: str, scale: vec3 = vec3(1)):
         self.ctx = ctx
         self.program = program
 
@@ -37,7 +37,7 @@ class Model:
         self.materials: list[Material] = []
 
         for material_dict in materials_dict.values():
-            self.materials.append(Material(ctx, program, material_dict))
+            self.materials.append(Material(ctx, program, material_dict, scale))
 
         self.materials.sort(key=lambda m: 'transparency' in m.material_dict)
 
@@ -47,19 +47,19 @@ class Model:
             for face in material['faces']:
                 self.collision_faces.append(Face(
                     vec3(
-                        face['a']['x'] * 42,
-                        face['a']['y'] * 42,
-                        face['a']['z'] * 42,
+                        face['a']['x'] * scale.x,
+                        face['a']['y'] * scale.y,
+                        face['a']['z'] * scale.z,
                     ),
                     vec3(
-                        face['b']['x'] * 42,
-                        face['b']['y'] * 42,
-                        face['b']['z'] * 42,
+                        face['b']['x'] * scale.x,
+                        face['b']['y'] * scale.y,
+                        face['b']['z'] * scale.z,
                     ),
                     vec3(
-                        face['c']['x'] * 42,
-                        face['c']['y'] * 42,
-                        face['c']['z'] * 42,
+                        face['c']['x'] * scale.x,
+                        face['c']['y'] * scale.y,
+                        face['c']['z'] * scale.z,
                     ),
                     vec3(
                         face['normal']['x'],
@@ -79,10 +79,11 @@ class Model:
 
 
 class Material:
-    def __init__(self, ctx: Context, program: Program, material_dict: dict[str, Any]):
+    def __init__(self, ctx: Context, program: Program, material_dict: dict[str, Any], scale: vec3):
         self.ctx = ctx
         self.program = program
         self.material_dict = material_dict
+        self.scale = scale
 
         self.texture_a: Texture | None = None
         self.texture_b: Texture | None = None
@@ -120,9 +121,9 @@ class Material:
         for face in self.material_dict['faces']:
             bytes_data += struct.pack(
                 '3f 3f 2f 4f',
-                face['a']['x'] * 42,
-                face['a']['y'] * 42,
-                face['a']['z'] * 42,
+                face['a']['x'] * self.scale.x,
+                face['a']['y'] * self.scale.y,
+                face['a']['z'] * self.scale.z,
                 face['normal']['x'],
                 face['normal']['y'],
                 face['normal']['z'],
@@ -136,9 +137,9 @@ class Material:
 
             bytes_data += struct.pack(
                 '3f 3f 2f 4f',
-                face['b']['x'] * 42,
-                face['b']['y'] * 42,
-                face['b']['z'] * 42,
+                face['b']['x'] * self.scale.x,
+                face['b']['y'] * self.scale.y,
+                face['b']['z'] * self.scale.z,
                 face['normal']['x'],
                 face['normal']['y'],
                 face['normal']['z'],
@@ -152,9 +153,9 @@ class Material:
 
             bytes_data += struct.pack(
                 '3f 3f 2f 4f',
-                face['c']['x'] * 42,
-                face['c']['y'] * 42,
-                face['c']['z'] * 42,
+                face['c']['x'] * self.scale.x,
+                face['c']['y'] * self.scale.y,
+                face['c']['z'] * self.scale.z,
                 face['normal']['x'],
                 face['normal']['y'],
                 face['normal']['z'],

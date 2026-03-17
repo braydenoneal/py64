@@ -26,7 +26,8 @@ class Render:
             fragment_shader=open('assets/shaders/main/fragment.glsl', 'r').read(),
         )
 
-        self.forest = Model(self.ctx, self.program, 'assets/models/forest.json')
+        self.forest = Model(self.ctx, self.program, 'assets/models/forest.json', vec3(42))
+        self.sphere = Model(self.ctx, self.program, 'assets/models/sphere.json', vec3(1, 1.35, 1))
 
         self.updates_per_second = 60
         self.frame_microseconds = 100000.0 / self.updates_per_second
@@ -49,5 +50,6 @@ class Render:
         self.program['camera'].write(self.get_camera_matrix())
 
         self.forest.render()
+        self.sphere.render()
 
         pygame.display.flip()
