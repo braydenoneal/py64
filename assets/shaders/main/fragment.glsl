@@ -13,7 +13,6 @@ uniform sampler2D texture_b;
 uniform bool use_texture_b;
 uniform ivec2 bounds_b;
 uniform vec2 texture_b_scale;
-
 uniform float texture_b_mix;
 
 uniform vec3 overlay_color;
