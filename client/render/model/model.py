@@ -90,8 +90,8 @@ class Material:
         if 'texture' in self.material_dict.keys():
             self.texture_a = self.create_texture(self.material_dict['texture']['name'])
 
-        if 'second_texture' in self.material_dict.keys():
-            self.texture_b = self.create_texture(self.material_dict['second_texture']['name'])
+        if 'texture_b' in self.material_dict.keys():
+            self.texture_b = self.create_texture(self.material_dict['texture_b']['name'])
 
         self.bytes = self.get_bytes()
         self.vbo = self.ctx.buffer(self.bytes)
@@ -103,14 +103,8 @@ class Material:
     def create_texture(self, name: str):
         textures_root = 'assets/textures/'
 
-        path = f'{textures_root}missing.png'
-        bmp_path = f'{textures_root}{name}.bmp'
-        png_path = f'{textures_root}{name}.png'
-
-        if os.path.isfile(bmp_path):
-            path = bmp_path
-        elif os.path.isfile(png_path):
-            path = png_path
+        path = f'{textures_root}{name}'
+        path = path if os.path.isfile(path) else f'{textures_root}missing.png'
 
         image = Image.open(path).convert('RGBA').transpose(Transpose.FLIP_TOP_BOTTOM)
         image_data = np.array(image, np.uint8).tobytes()
@@ -191,6 +185,9 @@ class Material:
 
         self.program['texture_b_mix'] = 0
 
+        self.program['texture_a'] = 0
+        self.program['texture_b'] = 1
+
         if self.texture_a:
             self.texture_a.use()
 
@@ -217,7 +214,7 @@ class Material:
 
             self.program['use_texture_b'] = True
 
-            texture_dict = self.material_dict['second_texture']
+            texture_dict = self.material_dict['texture_b']
             bound_options = ('repeat', 'extend', 'clip', 'mirror')
 
             self.program['bounds_b'] = (
