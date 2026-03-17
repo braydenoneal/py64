@@ -9,6 +9,7 @@ Also developing [n64-blender](https://github.com/braydenoneal/n64-blender) to ma
 - [ ] Merge collision
 - [ ] Separate player and camera positions
 - [ ] Toggleable free-cam mode
+- [ ] Fog
 - [ ] Order-independent transparency
 - [ ] Horizontal blur
 - [ ] Anti-aliasing
@@ -31,3 +32,5 @@ Also developing [n64-blender](https://github.com/braydenoneal/n64-blender) to ma
     - Maybe find a way to get the absolute Blender addon path machine and platform specific
         - https://blender.stackexchange.com/questions/20850/how-to-automatically-get-a-add-on-folders-path-regardless-of-os
     - Maybe force packed library if that doesn't work
+- [ ] Investigate rendering discrepancies between Blender and the engine
+    - For example, translucency, vertex colors, filtering, etc. appear slightly differently
