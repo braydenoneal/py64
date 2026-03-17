@@ -2,7 +2,10 @@
 
 uniform vec3 light;
 uniform sampler2D Texture;
+uniform vec3 solid_color;
+uniform bool use_texture;
 uniform ivec2 bounds;
+uniform vec2 texture_scale;
 uniform vec3 overlay_color;
 uniform float translucency;
 uniform int transparency_mode;
@@ -69,7 +72,11 @@ vec4 filter_texture(sampler2D sampler, vec2 uv) {
 }
 
 void main() {
-    out_color = filter_texture(Texture, uv);
+    if (use_texture) {
+        out_color = filter_texture(Texture, uv / texture_scale);
+    } else {
+        out_color = vec4(solid_color, 1);
+    }
 
     float luminance = dot(normalize(normal), normalize(light));
     out_color.rgb *= max(luminance, 0.0) * 0.5 + 0.5;

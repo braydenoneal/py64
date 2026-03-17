@@ -169,14 +169,32 @@ class Material:
         self.vbo.write(self.bytes)
 
     def render(self):
+        self.program['use_texture'] = False
+        self.program['solid_color'] = vec3(0)
         self.program['bounds'] = (0, 0)
+        self.program['texture_scale'] = (1, 1)
 
         if self.texture:
             self.texture.use()
 
+            self.program['use_texture'] = True
+
+            texture_dict = self.material_dict['texture']
+
             self.program['bounds'] = (
-                ('repeat', 'extend', 'clip', 'mirror').index(self.material_dict['texture']['bounds']['x']),
-                ('repeat', 'extend', 'clip', 'mirror').index(self.material_dict['texture']['bounds']['y']),
+                ('repeat', 'extend', 'clip', 'mirror').index(texture_dict['bounds']['x']),
+                ('repeat', 'extend', 'clip', 'mirror').index(texture_dict['bounds']['y']),
+            )
+
+            self.program['texture_scale'] = (
+                texture_dict['scale']['x'],
+                texture_dict['scale']['y'],
+            )
+        else:
+            self.program['solid_color'] = vec3(
+                self.material_dict['solid_color']['r'],
+                self.material_dict['solid_color']['g'],
+                self.material_dict['solid_color']['b'],
             )
 
         if self.material_dict['backface_culling']:

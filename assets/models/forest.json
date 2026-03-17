@@ -19131,7 +19131,7 @@
     "backface_culling": false,
     "transparency": {
       "mode": "transparent",
-      "translucency": 0.6499999761581421
+      "translucency": 0.2499999761581421
     },
     "vertex_colors": true,
     "overlay_color": {
@@ -19647,7 +19647,7 @@
     "backface_culling": false,
     "transparency": {
       "mode": "transparent",
-      "translucency": 0.6499999761581421
+      "translucency": 0.2499999761581421
     },
     "vertex_colors": true,
     "overlay_color": {
@@ -20071,7 +20071,7 @@
     "backface_culling": false,
     "transparency": {
       "mode": "transparent",
-      "translucency": 0.6499999761581421
+      "translucency": 0.2499999761581421
     },
     "vertex_colors": true,
     "overlay_color": {

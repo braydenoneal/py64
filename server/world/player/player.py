@@ -3,7 +3,7 @@ import math
 from pyglm import glm
 from pyglm.glm import vec3
 
-SPEED = 0.5
+SPEED = 0.25
 
 
 class Player:
