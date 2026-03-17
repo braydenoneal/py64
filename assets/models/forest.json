@@ -11427,6 +11427,22 @@
         "y": 0
       }
     },
+    "second_texture": {
+      "name": "5381E0EC_c",
+      "bounds": {
+        "x": "repeat",
+        "y": "repeat"
+      },
+      "scale": {
+        "x": 0.24,
+        "y": 0.24
+      },
+      "shift": {
+        "x": 0,
+        "y": 0
+      },
+      "mix": 0.5
+    },
     "backface_culling": true,
     "vertex_colors": false,
     "ambient_color": {
