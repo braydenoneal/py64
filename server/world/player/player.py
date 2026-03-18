@@ -1,5 +1,3 @@
-import math
-
 from pyglm import glm
 from pyglm.glm import vec3
 
@@ -10,7 +8,7 @@ class Player:
     def __init__(self):
         self.position = vec3(0, 10, 0)
         self.x_angle: float = 0
-        self.y_angle: float = math.pi / 2
+        self.y_angle: float = 0
         self.scale = vec3(0.75, 1.25, 0.75)
         self.grounded = False
         self.jump_vector = vec3(0)
@@ -30,10 +28,7 @@ class Player:
         return x_rotate * y_rotate
 
     def get_move(self, move_vector: vec3) -> vec3:
-        y_rotate = glm.rotate(self.y_angle, vec3(0, 1, 0))
-        translate = glm.translate(y_rotate * move_vector)
-
-        return translate * vec3(0, 0, 0)
+        return glm.rotate(self.y_angle, vec3(0, 1, 0)) * move_vector
 
     def get_direction(self):
         direction = vec3(0, 0, 0)

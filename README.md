@@ -7,8 +7,9 @@ Also developing [n64-blender](https://github.com/braydenoneal/n64-blender) to ma
 ## Todo
 
 - [x] Merge collision
-- [ ] Separate player and camera positions
-- [ ] Toggleable free-cam mode
+- [x] Separate player and camera positions
+- [x] Toggleable free-cam mode
+- [ ] Re-implement decoupling frame-rate from physics rate
 - [ ] Fog
 - [ ] Order-independent transparency
 - [ ] Horizontal blur

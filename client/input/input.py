@@ -2,14 +2,16 @@ import math
 
 import pygame
 
+from client.render.camera.camera import Camera
 from server.world.player.player import Player
 
 
 class Input:
-    def __init__(self, width: int, height: int, player: Player):
+    def __init__(self, width: int, height: int, player: Player, camera: Camera):
         self.width = width
         self.height = height
         self.player = player
+        self.camera = camera
         pygame.mouse.set_pos((self.width // 2, self.height // 2))
 
     def set_view_angle(self):
@@ -28,6 +30,9 @@ class Input:
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_q:
                     return False
+                if event.key == pygame.K_f:
+                    self.camera.free_cam = not self.camera.free_cam
+                    self.camera.snap_to_player()
 
         keys = pygame.key.get_pressed()
 
@@ -38,6 +43,13 @@ class Input:
 
         if keys[pygame.K_SPACE]:
             self.player.jump()
+
+        self.camera.movement['forward'] = keys[pygame.K_w]
+        self.camera.movement['backward'] = keys[pygame.K_s]
+        self.camera.movement['left'] = keys[pygame.K_a]
+        self.camera.movement['right'] = keys[pygame.K_d]
+        self.camera.movement['up'] = keys[pygame.K_SPACE]
+        self.camera.movement['down'] = keys[pygame.K_LSHIFT]
 
         pygame.event.set_grab(True)
 
