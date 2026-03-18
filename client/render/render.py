@@ -1,4 +1,3 @@
-import datetime
 import math
 
 import moderngl
@@ -31,16 +30,6 @@ class Render:
 
         self.forest = Model(self.ctx, self.program, 'assets/models/forest.json', vec3(42))
         self.sphere = Model(self.ctx, self.program, 'assets/models/sphere.json', self.player.scale)
-
-        self.updates_per_second = 60
-        self.frame_microseconds = 1_000_000 // self.updates_per_second
-        self.last_update = datetime.datetime.now()
-
-        self.prev_p_pos = vec3(self.player.position)
-        self.next_p_pos = vec3(self.player.position)
-
-        self.prev_c_pos = vec3(self.camera.position)
-        self.next_c_pos = vec3(self.camera.position)
 
     def collide_with_world(self, position: vec3, velocity: vec3, gravity: bool = False, iterations: int = 0) -> vec3:
         if iterations > 5 or velocity == vec3(0):
@@ -103,56 +92,32 @@ class Render:
         self.player.position = self.collide_with_world(self.player.position / self.player.scale, self.player.get_direction() / self.player.scale) * self.player.scale
         self.player.position = self.collide_with_world(self.player.position / self.player.scale, vec3(0, -0.2, 0) / self.player.scale, True) * self.player.scale
 
-    def get_camera_matrix(self, camera_position: vec3, model_position: vec3 = vec3(0), model_rotation: glm.mat4x4 = glm.mat4x4(1)):
+    def get_camera_matrix(self, model_position: vec3 = vec3(0), model_rotation: glm.mat4x4 = glm.mat4x4(1)):
         perspective = glm.perspective(math.radians(70.0), self.ratio, 0.1, 1000.0)
         rotation = self.camera.get_rotation_matrix()
-        translate = glm.translate(model_position - camera_position)
+        translate = glm.translate(model_position - self.camera.position)
 
         return perspective * rotation * translate * model_rotation
 
     def main_loop(self):
         self.ctx.clear()
 
-        now = datetime.datetime.now()
-        since_last_update = (now - self.last_update).microseconds
-
-        render_p_pos: vec3 = self.prev_p_pos + (self.next_p_pos - self.prev_p_pos) * (since_last_update / self.frame_microseconds)
-        render_c_pos: vec3 = self.prev_c_pos + (self.next_c_pos - self.prev_c_pos) * (since_last_update / self.frame_microseconds)
-
-        if since_last_update > self.frame_microseconds:
-            while since_last_update > 0:
-                since_last_update -= self.frame_microseconds
-                self.last_update = now
-
-                self.prev_p_pos = vec3(self.player.position)
-                render_p_pos = vec3(self.prev_p_pos)
-
-                self.prev_c_pos = vec3(self.camera.position)
-                render_c_pos = vec3(self.prev_c_pos)
-
-                if self.camera.free_cam:
-                    self.camera.position += self.camera.get_direction()
-                else:
-                    self.player.process_jump_vector()
-                    self.collide_and_slide()
-                    self.camera.snap_to_player()
-
-                self.next_p_pos = vec3(self.player.position)
-                self.next_c_pos = vec3(self.camera.position)
-
-        if not self.camera.free_cam:
-            render_c_pos = self.camera.snap_to_player_interpolated(render_p_pos)
+        if self.camera.free_cam:
+            self.camera.position += self.camera.get_direction()
+        else:
+            self.player.process_jump_vector()
+            self.collide_and_slide()
+            self.camera.snap_to_player()
 
         self.program['light'].write(vec3(-0.2, 0.55, 0.35))
 
         self.program['camera'].write(self.get_camera_matrix(
-            render_c_pos,
-            render_p_pos,
+            self.player.position,
             glm.rotate(self.player.y_angle + math.radians(180), vec3(0, 1, 0)),
         ))
         self.sphere.render()
 
-        self.program['camera'].write(self.get_camera_matrix(render_c_pos))
+        self.program['camera'].write(self.get_camera_matrix())
         self.forest.render()
 
         pygame.display.flip()

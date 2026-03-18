@@ -58,6 +58,3 @@ class Camera:
 
     def snap_to_player(self):
         self.position = self.player.position + glm.inverse(self.get_rotation_matrix()) * self.distance_from_player
-
-    def snap_to_player_interpolated(self, player_position: vec3):
-        return player_position + glm.inverse(self.get_rotation_matrix()) * self.distance_from_player
