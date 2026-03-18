@@ -6,7 +6,7 @@ Also developing [n64-blender](https://github.com/braydenoneal/n64-blender) to ma
 
 ## Todo
 
-- [ ] Merge collision
+- [x] Merge collision
 - [ ] Separate player and camera positions
 - [ ] Toggleable free-cam mode
 - [ ] Fog
@@ -16,6 +16,10 @@ Also developing [n64-blender](https://github.com/braydenoneal/n64-blender) to ma
 - [ ] Animations
 - [ ] Text display
 
+## Issues
+
+- [ ] Collision is messed up on the back side of two-sided faces
+
 ## Model Exporter Todo
 
 - [x] Merge vertex color and alpha attributes
@@ -23,7 +27,7 @@ Also developing [n64-blender](https://github.com/braydenoneal/n64-blender) to ma
 - [ ] Create an extensive test scene
 - [ ] Animations
 
-## Issues
+## Model Exporter Issues
 
 - [ ] Exporter missing some faces on wall_bottom_half for some reason
 - [ ] Exporter texture names sometimes have .001 at the end

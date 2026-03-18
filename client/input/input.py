@@ -35,8 +35,9 @@ class Input:
         self.player.movement['backward'] = keys[pygame.K_s]
         self.player.movement['left'] = keys[pygame.K_a]
         self.player.movement['right'] = keys[pygame.K_d]
-        self.player.movement['up'] = keys[pygame.K_SPACE]
-        self.player.movement['down'] = keys[pygame.K_LSHIFT]
+
+        if keys[pygame.K_SPACE]:
+            self.player.jump()
 
         pygame.event.set_grab(True)
 
