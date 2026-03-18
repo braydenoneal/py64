@@ -9,7 +9,9 @@ Also developing [n64-blender](https://github.com/braydenoneal/n64-blender) to ma
 - [x] Merge collision
 - [x] Separate player and camera positions
 - [x] Toggleable free-cam mode
-- [ ] Re-implement decoupling frame-rate from physics rate
+- [x] Re-implement decoupling frame-rate from physics rate
+- [ ] Clean up / refactor files
+    - Especially code related to collision and physics rate
 - [ ] Fog
 - [ ] Order-independent transparency
 - [ ] Horizontal blur
