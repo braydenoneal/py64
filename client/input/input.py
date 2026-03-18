@@ -28,27 +28,16 @@ class Input:
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_q:
                     return False
-                elif event.key == pygame.K_e:
-                    print(f"X: {self.player.x}")
-                    print(f"Y: {self.player.y}")
-                    print(f"Z: {self.player.z}")
-                    print(f"X Angle: {self.player.x_angle}")
-                    print(f"Y Angle: {self.player.y_angle}")
 
         keys = pygame.key.get_pressed()
 
-        if keys[pygame.K_w]:
-            self.player.move_forward()
-        if keys[pygame.K_s]:
-            self.player.move_backward()
-        if keys[pygame.K_a]:
-            self.player.move_left()
-        if keys[pygame.K_d]:
-            self.player.move_right()
+        self.player.movement['forward'] = keys[pygame.K_w]
+        self.player.movement['backward'] = keys[pygame.K_s]
+        self.player.movement['left'] = keys[pygame.K_a]
+        self.player.movement['right'] = keys[pygame.K_d]
+
         if keys[pygame.K_SPACE]:
-            self.player.move_up()
-        if keys[pygame.K_LSHIFT]:
-            self.player.move_down()
+            self.player.jump()
 
         pygame.event.set_grab(True)
 

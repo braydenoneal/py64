@@ -1,11 +1,13 @@
+import datetime
 import math
 
 import moderngl
 import pygame
 from pyglm import glm
+from pyglm.glm import vec3
 
-from client.assets.models.read_model import get_materials
-from client.assets.models.read_model2 import get_materials2
+from client.render.collision import collide, signed_distance_to_plane
+from client.render.model.model import Model
 from server.world.player.player import Player
 from server.world.world import World
 
@@ -21,76 +23,117 @@ class Render:
         self.ctx.enable(moderngl.CULL_FACE)
 
         self.program = self.ctx.program(
-            vertex_shader="""
-                #version 330 core
-
-                uniform mat4 camera;
-
-                in vec3 vertex;
-                in vec3 in_normal;
-                in vec2 in_uv;
-
-                out vec3 normal;
-                out vec2 uv;
-
-                void main() {
-                    gl_Position = camera * vec4(vertex / 10, 1);
-
-                    normal = in_normal;
-                    uv = in_uv;
-                }
-            """,
-            fragment_shader="""
-                #version 330 core
-
-                uniform sampler2D Texture;
-                uniform vec3 light;
-
-                in vec3 normal;
-                in vec2 uv;
-
-                out vec4 out_color;
-
-                void main() {
-                    out_color = texture(Texture, uv);
-
-                    float lum = dot(normalize(normal), normalize(light));
-                    out_color.rgb *= max(lum, 0.0) * 0.5 + 0.5;
-                }
-            """,
+            vertex_shader=open('assets/shaders/main/vertex.glsl', 'r').read(),
+            fragment_shader=open('assets/shaders/main/fragment.glsl', 'r').read(),
         )
 
-        self.materials = get_materials(self.ctx, self.program)
-        self.materials2 = get_materials2(self.ctx, self.program)
+        self.forest = Model(self.ctx, self.program, 'assets/models/forest.json', vec3(42))
+        self.sphere = Model(self.ctx, self.program, 'assets/models/sphere.json', self.player.scale)
 
-    def get_camera_matrix(self):
+        self.updates_per_second = 60
+        self.frame_microseconds = 100000.0 / self.updates_per_second
+        self.last_update = datetime.datetime.now()
+        self.prev_position = vec3(self.player.position)
+        self.next_position = vec3(self.player.position)
+
+    def collide_with_world(self, position: vec3, velocity: vec3, gravity: bool = False, iterations: int = 0) -> vec3:
+        if iterations > 5 or velocity == vec3(0):
+            return position
+
+        minimum_distance = 0.005
+        collisions: list[tuple[vec3, float]] = []
+
+        # Get all collisions
+        for face in self.forest.collision_faces:
+            # Convert vertices and normal to ellipsoid space
+            a = face.a / self.player.scale
+            b = face.b / self.player.scale
+            c = face.c / self.player.scale
+            normal = glm.normalize(glm.cross(b - a, c - a))
+
+            collision = collide(a, b, c, normal, position, velocity, face.one_sided)
+
+            if collision:
+                collisions.append(collision)
+
+        # Move freely if there are no collisions
+        if len(collisions) == 0:
+            return position + velocity
+
+        # Find the closest collision
+        collisions.sort(key=lambda collision: collision[1])
+        collision_point, collision_distance = collisions[0]
+
+        base_point = vec3(position)
+        destination_point = position + velocity
+
+        # Adjust to move very close to the collision point to avoid precision issues
+        if collision_distance >= minimum_distance:
+            base_point += glm.normalize(velocity) * (collision_distance - minimum_distance)
+            collision_point -= glm.normalize(velocity) * minimum_distance
+
+        # Find the sliding plane
+        slide_plane_origin = vec3(collision_point)
+        slide_plane_normal = glm.normalize(base_point - collision_point)
+
+        # Only apply gravity on steep slopes
+        if gravity and abs(glm.length(vec3(0, 1, 0) - slide_plane_normal)) < 0.5:
+            self.player.grounded = True
+            return base_point
+
+        destination_point -= signed_distance_to_plane(slide_plane_normal, slide_plane_origin, destination_point) * slide_plane_normal
+
+        # Find the slide vector
+        next_velocity = destination_point - collision_point
+
+        # End recursion if the next move is too small
+        if glm.length(next_velocity) < minimum_distance:
+            return base_point
+
+        return self.collide_with_world(base_point, next_velocity, gravity, iterations + 1)
+
+    def collide_and_slide(self):
+        self.player.grounded = False
+        self.player.position = self.collide_with_world(self.player.position / self.player.scale, self.player.get_direction() / self.player.scale) * self.player.scale
+        self.player.position = self.collide_with_world(self.player.position / self.player.scale, vec3(0, -0.2, 0) / self.player.scale, True) * self.player.scale
+
+    def get_camera_matrix(self, position: vec3):
         perspective = glm.perspective(math.radians(70.0), self.ratio, 0.1, 1000.0)
-        translate1 = glm.translate(-self.player.get_position_vector())
+        translate1 = glm.translate(-position)
         rotation = self.player.get_rotation_matrix()
-        translate = glm.translate(-glm.vec3(0, 16, 32))
+        translate = glm.translate(-vec3(0, 0, 16))
 
         return perspective * translate * rotation * translate1
 
     def get_player_camera_matrix(self):
         perspective = glm.perspective(math.radians(70.0), self.ratio, 0.1, 1000.0)
         rotation = self.player.get_rotation_matrix()
-        translate = glm.translate(-glm.vec3(0, 16, 32))
-        y_rotate = glm.rotate(self.player.y_angle + math.radians(180), glm.vec3(0, 1, 0))
+        translate = glm.translate(-vec3(0, 0, 16))
+        y_rotate = glm.rotate(self.player.y_angle + math.radians(180), vec3(0, 1, 0))
 
         return perspective * translate * rotation * y_rotate
 
     def main_loop(self):
         self.ctx.clear()
 
-        self.program['camera'].write(self.get_camera_matrix())
-        self.program['light'].write(glm.vec3(0, 1, 0))
+        now = datetime.datetime.now()
+        since_last_update = (now - self.last_update).microseconds
+        render_position: vec3 = self.prev_position + (self.next_position - self.prev_position) * (since_last_update / self.frame_microseconds)
 
-        for material in self.materials:
-            material.render()
+        if since_last_update > self.frame_microseconds:
+            self.last_update = now
+            self.prev_position = vec3(self.player.position)
+            render_position = self.prev_position
+            self.player.process_jump_vector()
+            self.collide_and_slide()
+            self.next_position = vec3(self.player.position)
+
+        self.program['light'].write(vec3(-0.2, 0.55, 0.35))
 
         self.program['camera'].write(self.get_player_camera_matrix())
+        self.sphere.render()
 
-        for material in self.materials2:
-            material.render()
+        self.program['camera'].write(self.get_camera_matrix(render_position))
+        self.forest.render()
 
         pygame.display.flip()
