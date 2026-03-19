@@ -2,16 +2,16 @@ import math
 
 import pygame
 
-from client.render.camera.camera import Camera
-from server.world.player.player import Player
+from py64.game.game import Game
 
 
 class Input:
-    def __init__(self, width: int, height: int, player: Player, camera: Camera):
+    def __init__(self, game: Game, width: int, height: int):
+        self.game = game
+        self.player = game.player
+        self.camera = game.camera
         self.width = width
         self.height = height
-        self.player = player
-        self.camera = camera
         pygame.mouse.set_pos((self.width // 2, self.height // 2))
 
     def set_view_angle(self):

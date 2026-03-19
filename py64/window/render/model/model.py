@@ -1,7 +1,6 @@
 import json
 import os.path
 import struct
-from dataclasses import dataclass, astuple
 from typing import Any
 
 import moderngl
@@ -10,18 +9,6 @@ from PIL import Image
 from PIL.Image import Transpose
 from moderngl import Context, Program, Texture
 from pyglm.glm import vec3
-
-
-@dataclass
-class Face:
-    a: vec3
-    b: vec3
-    c: vec3
-    normal: vec3
-    one_sided: bool
-
-    def __iter__(self):
-        return iter(astuple(self))
 
 
 class Model:
@@ -40,34 +27,6 @@ class Model:
             self.materials.append(Material(ctx, program, material_dict, scale))
 
         self.materials.sort(key=lambda m: 'transparency' in m.material_dict)
-
-        self.collision_faces: list[Face] = []
-
-        for material in materials_dict.values():
-            for face in material['faces']:
-                self.collision_faces.append(Face(
-                    vec3(
-                        face['a']['x'] * scale.x,
-                        face['a']['y'] * scale.y,
-                        face['a']['z'] * scale.z,
-                    ),
-                    vec3(
-                        face['b']['x'] * scale.x,
-                        face['b']['y'] * scale.y,
-                        face['b']['z'] * scale.z,
-                    ),
-                    vec3(
-                        face['c']['x'] * scale.x,
-                        face['c']['y'] * scale.y,
-                        face['c']['z'] * scale.z,
-                    ),
-                    vec3(
-                        face['normal']['x'],
-                        face['normal']['y'],
-                        face['normal']['z'],
-                    ),
-                    material['backface_culling'],
-                ))
 
     def update(self):
         for material in self.materials:
@@ -102,7 +61,7 @@ class Material:
         ])
 
     def create_texture(self, name: str):
-        textures_root = 'assets/textures/'
+        textures_root = '../assets/textures/'
 
         path = f'{textures_root}{name}'
         path = path if os.path.isfile(path) else f'{textures_root}missing.png'

@@ -9,8 +9,8 @@ Also developing [n64-blender](https://github.com/braydenoneal/n64-blender) to ma
 - [x] Merge collision
 - [x] Separate player and camera positions
 - [x] Toggleable free-cam mode
-- [ ] Clean up / refactor files
-    - Especially code related to collision and physics rate
+- [x] Clean up / refactor files
+- [ ] Refactor / rewrite collision code
 - [ ] Fog
 - [ ] Order-independent transparency
 - [ ] Horizontal blur

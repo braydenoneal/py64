@@ -3,6 +3,9 @@ import math
 from pyglm import glm
 from pyglm.glm import vec3
 
+from py64.game.collision.collider.collider import Collider
+from py64.game.player.player import Player
+
 
 def signed_distance_to_plane(plane_normal: vec3, plane_origin: vec3, point: vec3) -> float:
     return (point @ plane_normal) - (
@@ -168,3 +171,66 @@ def collide(a: vec3, b: vec3, c: vec3, normal: vec3, base_point: vec3, velocity:
     intersect, time = get_line_intersection(c, a, time, base_point, velocity) or (intersect, time)
 
     return (intersect, time * glm.length(velocity)) if intersect else None
+
+
+def collide_with_world(player: Player, collider: Collider, position: vec3, velocity: vec3, gravity: bool = False, iterations: int = 0) -> vec3:
+    if iterations > 5 or velocity == vec3(0):
+        return position
+
+    minimum_distance = 0.005
+    collisions: list[tuple[vec3, float]] = []
+
+    # Get all collisions
+    for face in collider.collision_faces:
+        # Convert vertices and normal to ellipsoid space
+        a = face.a / player.scale
+        b = face.b / player.scale
+        c = face.c / player.scale
+        normal = glm.normalize(glm.cross(b - a, c - a))
+
+        collision = collide(a, b, c, normal, position, velocity, face.one_sided)
+
+        if collision:
+            collisions.append(collision)
+
+    # Move freely if there are no collisions
+    if len(collisions) == 0:
+        return position + velocity
+
+    # Find the closest collision
+    collisions.sort(key=lambda x: x[1])
+    collision_point, collision_distance = collisions[0]
+
+    base_point = vec3(position)
+    destination_point = position + velocity
+
+    # Adjust to move very close to the collision point to avoid precision issues
+    if collision_distance >= minimum_distance:
+        base_point += glm.normalize(velocity) * (collision_distance - minimum_distance)
+        collision_point -= glm.normalize(velocity) * minimum_distance
+
+    # Find the sliding plane
+    slide_plane_origin = vec3(collision_point)
+    slide_plane_normal = glm.normalize(base_point - collision_point)
+
+    # Only apply gravity on steep slopes
+    if gravity and abs(glm.length(vec3(0, 1, 0) - slide_plane_normal)) < 0.5:
+        player.grounded = True
+        return base_point
+
+    destination_point -= signed_distance_to_plane(slide_plane_normal, slide_plane_origin, destination_point) * slide_plane_normal
+
+    # Find the slide vector
+    next_velocity = destination_point - collision_point
+
+    # End recursion if the next move is too small
+    if glm.length(next_velocity) < minimum_distance:
+        return base_point
+
+    return collide_with_world(player, collider, base_point, next_velocity, gravity, iterations + 1)
+
+
+def collide_and_slide(player: Player, collider: Collider):
+    player.grounded = False
+    player.position = collide_with_world(player, collider, player.position / player.scale, player.get_direction() / player.scale) * player.scale
+    player.position = collide_with_world(player, collider, player.position / player.scale, vec3(0, -0.2, 0) / player.scale, True) * player.scale

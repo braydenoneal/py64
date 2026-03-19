@@ -1,8 +1,6 @@
 from pyglm import glm
 from pyglm.glm import vec3
 
-SPEED = 0.2
-
 
 class Player:
     def __init__(self):
@@ -10,6 +8,7 @@ class Player:
         self.x_angle: float = 0
         self.y_angle: float = 0
         self.scale = vec3(0.75, 1.25, 0.75)
+        self.speed = 0.2
         self.grounded = False
         self.jump_vector = vec3(0)
 
@@ -46,7 +45,7 @@ class Player:
             direction += self.get_move(vec3(1, 0, 0))
 
         if glm.length(direction) != 0.0:
-            direction = glm.normalize(direction) * SPEED
+            direction = glm.normalize(direction) * self.speed
 
         if self.movement['up']:
             direction += self.jump_vector

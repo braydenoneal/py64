@@ -1,15 +1,14 @@
 from pyglm import glm
 from pyglm.glm import vec3
 
-from server.world.player.player import Player
-
-SPEED = 0.2
+from py64.game.player.player import Player
 
 
 class Camera:
     def __init__(self, player: Player):
         self.player = player
         self.free_cam = False
+        self.speed = 0.2
         self.position = vec3(0)
         self.distance_from_player = vec3(0, 0, 12)
 
@@ -52,7 +51,7 @@ class Camera:
             direction += self.get_move(vec3(0, -1, 0))
 
         if glm.length(direction) != 0.0:
-            direction = glm.normalize(direction) * SPEED
+            direction = glm.normalize(direction) * self.speed
 
         return direction
 
