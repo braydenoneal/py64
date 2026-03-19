@@ -10,7 +10,7 @@ Also developing [n64-blender](https://github.com/braydenoneal/n64-blender) to ma
 - [x] Separate player and camera positions
 - [x] Toggleable free-cam mode
 - [x] Clean up / refactor files
-- [ ] Refactor / rewrite collision code
+- [x] Refactor / rewrite collision code
 - [ ] Fog
 - [ ] Order-independent transparency
 - [ ] Horizontal blur

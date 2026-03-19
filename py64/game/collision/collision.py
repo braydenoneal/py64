@@ -1,112 +1,58 @@
 import math
+from dataclasses import dataclass
 
 from pyglm import glm
 from pyglm.glm import vec3
 
-from py64.game.collision.collider.collider import Collider
-from py64.game.player.player import Player
+
+@dataclass
+class Intersect:
+    point: vec3
+    time: float
+    embedded: bool = False
 
 
-def signed_distance_to_plane(plane_normal: vec3, plane_origin: vec3, point: vec3) -> float:
-    return (point @ plane_normal) - (
-            plane_normal.x * plane_origin.x +
-            plane_normal.y * plane_origin.y +
-            plane_normal.z * plane_origin.z
-    )
-
-
-def get_plane_intersect_time(plane_normal: vec3, plane_origin: vec3, base_point: vec3, velocity: vec3) -> tuple[float | None, bool]:
-    signed_distance = signed_distance_to_plane(plane_normal, plane_origin, base_point)
-    denominator = plane_normal @ velocity
-
-    if denominator == 0:
-        if abs(signed_distance) < 1:
-            return 0, True
-        else:
-            return None, False
-
-    t0 = (1 - signed_distance) / denominator
-    t1 = (-1 - signed_distance) / denominator
-
-    if t0 > t1:
-        temp = t1
-        t1 = t0
-        t0 = temp
-
-    if t0 > 1 or t1 < 0:
-        return None, False
-
-    return glm.clamp(t0, 0, 1), False
-
-
-def get_plane_intersection_point(t0: float, plane_normal: vec3, base_point: vec3, velocity: vec3) -> vec3:
-    return base_point - plane_normal + t0 * velocity
-
-
-def is_point_in_triangle(a: vec3, b: vec3, c: vec3, normal: vec3, point: vec3) -> bool:
-    # Nearest to plane
-    distance = (point - a) @ normal
-    nearest_point = point - distance * normal
-
-    # Inside triangle
-    pa = a - nearest_point
-    pb = b - nearest_point
-    pc = c - nearest_point
-
-    u = glm.cross(pb, pc)
-    v = glm.cross(pc, pa)
-    w = glm.cross(pa, pb)
-
-    return u @ v > 0 and u @ w > 0
-
-
-def get_lowest_root(a: float, b: float, c: float, cutoff: float) -> float | None:
-    # Check if a solution exists
+def get_intersect_time(a: float, b: float, c: float, cutoff: float) -> float | None:
     determinant = b * b - 4.0 * a * c
 
-    # If determinant is negative it means no solutions.
     if determinant < 0 or a == 0.0:
         return None
 
-    # Calculate the two roots: (if determinant == 0 then x1==x2 but let’s disregard that slight optimization)
     sqrt_d = math.sqrt(determinant)
-    r1 = (-b - sqrt_d) / (2.0 * a)
-    r2 = (-b + sqrt_d) / (2.0 * a)
 
-    # Sort so x1 <= x2
-    if r1 > r2:
-        temp = r2
-        r2 = r1
-        r1 = temp
+    time_a = (-b - sqrt_d) / (2.0 * a)
+    time_b = (-b + sqrt_d) / (2.0 * a)
 
-    # Get the lowest root
-    if 0 < r1 < cutoff:
-        return r1
+    if time_a > time_b:
+        temp = time_b
+        time_b = time_a
+        time_a = temp
 
-    # It is possible that we want x2 - this can happen if x1 < 0
-    if 0 < r2 < cutoff:
-        return r2
+    if 0 < time_a < cutoff:
+        return time_a
 
-    # No (valid) solutions
+    if 0 < time_b < cutoff:
+        return time_b
+
     return None
 
 
-def get_vertex_intersection(point: vec3, current_lowest_time: float, base_point: vec3, velocity: vec3) -> tuple[vec3, float] | None:
+def get_vertex_intersect(point: vec3, intersect: Intersect | None, start_point: vec3, velocity: vec3) -> Intersect | None:
     a = velocity @ velocity
-    b = 2.0 * (velocity @ (base_point - point))
-    c = glm.length2(point - base_point) - 1.0
+    b = 2.0 * (velocity @ (start_point - point))
+    c = glm.length2(point - start_point) - 1.0
 
-    x1 = get_lowest_root(a, b, c, current_lowest_time)
+    time = get_intersect_time(a, b, c, intersect.time if intersect is not None else 1.0)
 
-    if not x1:
+    if time is None:
         return None
 
-    return point, x1
+    return Intersect(point, time)
 
 
-def get_line_intersection(p1: vec3, p2: vec3, current_lowest_time: float, base_point: vec3, velocity: vec3) -> tuple[vec3, float] | None:
-    edge = p2 - p1
-    base_to_vertex = p1 - base_point
+def get_line_intersect(point_a: vec3, point_b: vec3, intersect: Intersect | None, start_point: vec3, velocity: vec3) -> Intersect | None:
+    edge = point_b - point_a
+    base_to_vertex = point_a - start_point
 
     edge_squared_length = glm.length2(edge)
     edge_dot_velocity = edge @ velocity
@@ -117,120 +63,107 @@ def get_line_intersection(p1: vec3, p2: vec3, current_lowest_time: float, base_p
     b = edge_squared_length * (2.0 * (velocity @ base_to_vertex)) - 2.0 * edge_dot_velocity * edge_dot_base_to_vertex
     c = edge_squared_length * (1.0 - glm.length2(base_to_vertex)) + edge_dot_base_to_vertex * edge_dot_base_to_vertex
 
-    x1 = get_lowest_root(a, b, c, current_lowest_time)
-
-    if not x1:
-        return None
-
-    line_segment_location = (edge_dot_velocity * x1 - edge_dot_base_to_vertex) / edge_squared_length
-
-    return (p1 + line_segment_location * edge, x1) if 0 <= line_segment_location <= 1 else None
-
-
-def collide(a: vec3, b: vec3, c: vec3, normal: vec3, base_point: vec3, velocity: vec3, one_sided: bool) -> tuple[vec3, float] | None:
-    """
-    Uses:
-    - Sphere starting point
-    - Sphere velocity vector
-    - Triangle points
-    - Triangle normal
-
-    Returns:
-    - The position where the sphere hits the geometry.
-    - The distance along the velocity vector that the sphere must travel before the collision occurs.
-    """
-    if one_sided and normal @ glm.normalize(velocity) > 0:
-        return None  # Not facing the triangle
-
-    # Get the time that the sphere starts and stops colliding
-    time, embedded = get_plane_intersect_time(normal, a, base_point, velocity)
+    time = get_intersect_time(a, b, c, intersect.time if intersect is not None else 1.0)
 
     if time is None:
-        return None  # Does not collide
+        return None
 
-    if not embedded:
-        # Get the point where the sphere first intersects with the triangle's plane
-        plane_intersection_point = get_plane_intersection_point(time, normal, base_point, velocity)
+    line_segment_location = (edge_dot_velocity * time - edge_dot_base_to_vertex) / edge_squared_length
 
-        # Check if that point is within the triangle bounds
-        if is_point_in_triangle(a, b, c, normal, plane_intersection_point):
-            # Collides with the inside of the triangle; plane_intersection_point is the collision point
-            return plane_intersection_point, time * glm.length(velocity)
+    if 0 <= line_segment_location <= 1:
+        return Intersect(point_a + line_segment_location * edge, time)
 
-    time = 1.0
-    intersect: vec3 | None = None
-
-    # Check collision against the vertices
-    intersect, time = get_vertex_intersection(a, time, base_point, velocity) or (intersect, time)
-    intersect, time = get_vertex_intersection(b, time, base_point, velocity) or (intersect, time)
-    intersect, time = get_vertex_intersection(c, time, base_point, velocity) or (intersect, time)
-
-    # Check collision against the edges
-    intersect, time = get_line_intersection(a, b, time, base_point, velocity) or (intersect, time)
-    intersect, time = get_line_intersection(b, c, time, base_point, velocity) or (intersect, time)
-    intersect, time = get_line_intersection(c, a, time, base_point, velocity) or (intersect, time)
-
-    return (intersect, time * glm.length(velocity)) if intersect else None
+    return None
 
 
-def collide_with_world(player: Player, collider: Collider, position: vec3, velocity: vec3, gravity: bool = False, iterations: int = 0) -> vec3:
-    if iterations > 5 or velocity == vec3(0):
-        return position
+class Plane:
+    def __init__(self, origin: vec3, normal: vec3):
+        self.origin = vec3(origin)
+        self.normal = vec3(normal)
 
-    minimum_distance = 0.005
-    collisions: list[tuple[vec3, float]] = []
+    def get_signed_distance(self, point: vec3) -> float:
+        return (point @ self.normal) - (
+                self.normal.x * self.origin.x +
+                self.normal.y * self.origin.y +
+                self.normal.z * self.origin.z
+        )
 
-    # Get all collisions
-    for face in collider.collision_faces:
-        # Convert vertices and normal to ellipsoid space
-        a = face.a / player.scale
-        b = face.b / player.scale
-        c = face.c / player.scale
-        normal = glm.normalize(glm.cross(b - a, c - a))
+    def get_intersect(self, start_point: vec3, velocity: vec3) -> Intersect | None:
+        signed_distance = self.get_signed_distance(start_point)
+        denominator = self.normal @ velocity
 
-        collision = collide(a, b, c, normal, position, velocity, face.one_sided)
+        if denominator == 0:
+            if abs(signed_distance) < 1:
+                return Intersect(start_point - self.normal, 0, True)
+            else:
+                return None
 
-        if collision:
-            collisions.append(collision)
+        time_a = (1 - signed_distance) / denominator
+        time_b = (-1 - signed_distance) / denominator
 
-    # Move freely if there are no collisions
-    if len(collisions) == 0:
-        return position + velocity
+        if time_a > time_b:
+            temp = time_b
+            time_b = time_a
+            time_a = temp
 
-    # Find the closest collision
-    collisions.sort(key=lambda x: x[1])
-    collision_point, collision_distance = collisions[0]
+        if time_a > 1 or time_b < 0:
+            return None
 
-    base_point = vec3(position)
-    destination_point = position + velocity
+        time = glm.clamp(time_a, 0, 1)
+        point = start_point - self.normal + time * velocity
 
-    # Adjust to move very close to the collision point to avoid precision issues
-    if collision_distance >= minimum_distance:
-        base_point += glm.normalize(velocity) * (collision_distance - minimum_distance)
-        collision_point -= glm.normalize(velocity) * minimum_distance
-
-    # Find the sliding plane
-    slide_plane_origin = vec3(collision_point)
-    slide_plane_normal = glm.normalize(base_point - collision_point)
-
-    # Only apply gravity on steep slopes
-    if gravity and abs(glm.length(vec3(0, 1, 0) - slide_plane_normal)) < 0.5:
-        player.grounded = True
-        return base_point
-
-    destination_point -= signed_distance_to_plane(slide_plane_normal, slide_plane_origin, destination_point) * slide_plane_normal
-
-    # Find the slide vector
-    next_velocity = destination_point - collision_point
-
-    # End recursion if the next move is too small
-    if glm.length(next_velocity) < minimum_distance:
-        return base_point
-
-    return collide_with_world(player, collider, base_point, next_velocity, gravity, iterations + 1)
+        return Intersect(point, time)
 
 
-def collide_and_slide(player: Player, collider: Collider):
-    player.grounded = False
-    player.position = collide_with_world(player, collider, player.position / player.scale, player.get_direction() / player.scale) * player.scale
-    player.position = collide_with_world(player, collider, player.position / player.scale, vec3(0, -0.2, 0) / player.scale, True) * player.scale
+@dataclass
+class Face:
+    a: vec3
+    b: vec3
+    c: vec3
+    normal: vec3
+    one_sided: bool
+
+    def is_point_inside(self, point: vec3) -> bool:
+        # Nearest to plane
+        distance = (point - self.a) @ self.normal
+        nearest_point = point - distance * self.normal
+
+        # Inside triangle
+        pa = self.a - nearest_point
+        pb = self.b - nearest_point
+        pc = self.c - nearest_point
+
+        u = glm.cross(pb, pc)
+        v = glm.cross(pc, pa)
+        w = glm.cross(pa, pb)
+
+        return u @ v > 0 and u @ w > 0
+
+    def get_intersect(self, start_point: vec3, velocity: vec3) -> Intersect | None:
+        if self.one_sided and self.normal @ glm.normalize(velocity) > 0:
+            return None  # Not facing the triangle
+
+        # Get the intersection with the face's plane
+        intersect = Plane(self.a, self.normal).get_intersect(start_point, velocity)
+
+        if intersect is None:
+            return None  # Does not collide
+
+        if not intersect.embedded:
+            # Check if the plane intersection point is within the triangle bounds
+            if self.is_point_inside(intersect.point):
+                return intersect
+
+        intersect = None
+
+        # Check collision against the vertices
+        intersect = get_vertex_intersect(self.a, intersect, start_point, velocity) or intersect
+        intersect = get_vertex_intersect(self.b, intersect, start_point, velocity) or intersect
+        intersect = get_vertex_intersect(self.c, intersect, start_point, velocity) or intersect
+
+        # Check collision against the edges
+        intersect = get_line_intersect(self.a, self.b, intersect, start_point, velocity) or intersect
+        intersect = get_line_intersect(self.b, self.c, intersect, start_point, velocity) or intersect
+        intersect = get_line_intersect(self.c, self.a, intersect, start_point, velocity) or intersect
+
+        return intersect

@@ -6,7 +6,7 @@ def main():
     game = Game()
     window = Window(game)
 
-    while game.running and window.input.main_loop():
+    while window.input.main_loop():
         game.main_loop()
         window.render.main_loop()
 
