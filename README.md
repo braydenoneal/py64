@@ -21,7 +21,7 @@ Also developing [n64-blender](https://github.com/braydenoneal/n64-blender) to ma
 
 ## Issues
 
-- [ ] Collision is messed up on the back side of two-sided faces
+- [x] Collision is messed up on the back side of two-sided faces
 
 ## Model Exporter Todo
 

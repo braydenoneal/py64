@@ -140,8 +140,13 @@ class Face:
         return u @ v > 0 and u @ w > 0
 
     def get_intersect(self, start_point: vec3, velocity: vec3) -> Intersect | None:
-        if self.one_sided and self.normal @ glm.normalize(velocity) > 0:
+        facing = self.normal @ glm.normalize(velocity) <= 0
+
+        if self.one_sided and not facing:
             return None  # Not facing the triangle
+
+        if not facing:
+            self.normal *= -1
 
         # Get the intersection with the face's plane
         intersect = Plane(self.a, self.normal).get_intersect(start_point, velocity)
