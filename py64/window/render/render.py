@@ -7,6 +7,7 @@ from pyglm.glm import vec3
 
 from py64.game.game import Game
 from py64.window.render.model.model import Model
+from py64.window.render.text.text import Text
 
 
 class Render:
@@ -29,6 +30,8 @@ class Render:
         self.forest = Model(self.ctx, self.program, '../assets/models/forest.json', vec3(42))
         self.sphere = Model(self.ctx, self.program, '../assets/models/sphere.json', self.player.scale)
 
+        self.text = Text(self.ctx, self.width, self.height)
+
     def get_camera_matrix(self, model_position: vec3 = vec3(0), model_rotation: glm.mat4x4 = glm.mat4x4(1)):
         perspective = glm.perspective(math.radians(70.0), self.width / self.height, 0.1, 1000.0)
         rotation = self.camera.get_rotation_matrix()
@@ -49,5 +52,9 @@ class Render:
 
         self.program['camera'].write(self.get_camera_matrix())
         self.forest.render()
+
+        self.text.text = ', '.join(str(round(v, 2)) for v in self.player.position.to_list())
+        self.text.update()
+        self.text.render()
 
         pygame.display.flip()

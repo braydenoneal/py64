@@ -11,12 +11,19 @@ Also developing [n64-blender](https://github.com/braydenoneal/n64-blender) to ma
 - [x] Toggleable free-cam mode
 - [x] Clean up / refactor files
 - [x] Refactor / rewrite collision code
+- [;] Text display
+    - [x] Generate font assets
+    - [x] Move font asset generator into runtime to load into pillow image instead of file
+    - [x] Correct aspect ratio
+    - [ ] Different font sizes
+    - [ ] Text position
+    - [ ] Multi-line text
+    - [ ] Allow changing text
 - [ ] Fog
 - [ ] Order-independent transparency
 - [ ] Horizontal blur
 - [ ] Anti-aliasing
 - [ ] Animations
-- [ ] Text display
 - [ ] Revisit decoupling frame-rate from physics rate
 
 ## Issues
