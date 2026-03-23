@@ -48,3 +48,28 @@ Also developing [n64-blender](https://github.com/braydenoneal/n64-blender) to ma
     - Maybe force packed library if that doesn't work
 - [ ] Investigate rendering discrepancies between Blender and the engine
     - For example, translucency, vertex colors, filtering, etc. appear slightly differently
+
+## Coordinate Reference
+
+- OpenGL
+    - 3D space
+        - X: -left, +right
+        - Y: -down, +up
+        - Z: -towards camera, +away from camera
+        - Origin: 0, 0, 0
+    - Screen space
+        - X: -left, +right
+        - Y: -down, +up
+        - Center: 0, 0
+        - Bottom left: -1, -1
+        - Top right: 1, 1
+    - UV coordinates
+        - X: -left, +right
+        - Y: -up, +down
+        - Top left: 0, 0
+        - Bottom right: 1, 1
+- Pillow
+    - X: -left, +right
+    - Y: -up, +down
+    - Top left: 0, 0
+    - Bottom right: 1, 1

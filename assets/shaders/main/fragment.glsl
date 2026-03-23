@@ -64,11 +64,11 @@ vec4 filter_texture(sampler2D sampler, vec2 uv, ivec2 bounds) {
     vec2 pixel_size = 1.0 / texture_size;
     vec2 pixel_position = fract(uv * texture_size);
 
-    float side = step(0.0, pixel_position.x - pixel_position.y);
-    vec2 offset = vec2(side, 1.0 - side) * pixel_size;
+    float side = step(0.0, 1.0 - pixel_position.x - pixel_position.y);
+    vec2 offset = vec2(-side, 1.0 - side) * pixel_size;
 
     vec2 uv_a = wrap_uv(uv, bounds);
-    vec2 uv_b = wrap_uv(uv + pixel_size, bounds);
+    vec2 uv_b = wrap_uv(uv + vec2(-pixel_size.x, pixel_size.y), bounds);
     vec2 uv_c = wrap_uv(uv + offset, bounds);
 
     vec4 color_a = clip_color(uv_a, bounds, texture(sampler, uv_a));
@@ -76,9 +76,9 @@ vec4 filter_texture(sampler2D sampler, vec2 uv, ivec2 bounds) {
     vec4 color_c = clip_color(uv_c, bounds, texture(sampler, uv_c));
 
     return
-    color_a * (1.0 - max(pixel_position.x, pixel_position.y)) +
-    color_b * min(pixel_position.x, pixel_position.y) +
-    color_c * abs(pixel_position.x - pixel_position.y);
+    color_a * (1.0 - max(1.0 - pixel_position.x, pixel_position.y)) +
+    color_b * min(1.0 - pixel_position.x, pixel_position.y) +
+    color_c * abs(1.0 - pixel_position.x - pixel_position.y);
 }
 
 void main() {
