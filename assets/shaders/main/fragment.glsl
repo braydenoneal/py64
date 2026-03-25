@@ -1,6 +1,7 @@
 #version 330 core
 
 uniform vec3 light;
+uniform vec2 screen_size;
 
 uniform vec3 solid_color;
 
@@ -19,6 +20,9 @@ uniform vec3 overlay_color;
 
 uniform float translucency;
 uniform int transparency_mode;
+
+//uniform sampler2D color_texture;
+uniform sampler2D depth_texture;
 
 in vec3 normal;
 in vec2 uv;
@@ -106,4 +110,9 @@ void main() {
     }
 
     out_color2 = vec4(vec3(depth), 1);
+
+    if (depth < texture(depth_texture, gl_FragCoord.xy / screen_size).r) {
+        out_color = vec4(0);
+        // discard;
+    }
 }

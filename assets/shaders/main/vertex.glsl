@@ -19,5 +19,5 @@ void main() {
     uv = in_uv;
     color = in_color;
 
-    depth = gl_Position.z / 100;
+    depth = 1 - clamp(gl_Position.z / 100, 0, 1);
 }
