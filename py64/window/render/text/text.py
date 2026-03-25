@@ -1,6 +1,7 @@
 import math
 import struct
 
+import moderngl
 import numpy as np
 from PIL import Image
 from PIL import ImageDraw, ImageFont
@@ -9,10 +10,14 @@ from pyglm import glm
 
 
 class Text:
-    def __init__(self, ctx: Context, width: int, height: int):
+    def __init__(self, ctx: Context, width: int, height: int, x: float = 0.0, y: float = 0.0, text: str = ' ', size: float = 8.0):
         self.ctx = ctx
         self.width = width
         self.height = height
+        self.text = text
+        self.size = size
+        self.x = x
+        self.y = y
 
         self.program = self.ctx.program(
             vertex_shader=open('../assets/shaders/font/vertex.glsl', 'r').read(),
@@ -41,8 +46,7 @@ class Text:
 
         image_data = np.array(image, np.uint8).tobytes()
         self.texture = self.ctx.texture(image.size, 4, image_data)
-
-        self.text = 'Hello, world!'
+        self.texture.filter = (moderngl.NEAREST, moderngl.NEAREST)
 
         self.bytes = self.get_bytes()
         self.vbo = self.ctx.buffer(self.bytes)
@@ -54,20 +58,26 @@ class Text:
     def get_bytes(self) -> bytes:
         bytes_data = b''
 
-        scale = 0.005
-        offset = 0.0
+        scale = self.size / 1000
+        x_offset = 0.0
+        y_offset = 0.0
 
         for c in self.text:
+            if c == '\n':
+                y_offset += self.max_y * scale
+                x_offset = 0.0
+                continue
+
             if c not in self.lengths:
                 continue
 
             length = self.lengths[c] * scale
 
-            x0 = offset
+            x0 = x_offset - 1.0 + self.x * 2
             x1 = x0 + length
 
-            y0 = 0.0
-            y1 = y0 + self.max_y * scale
+            y1 = 1.0 - y_offset - self.y * 2
+            y0 = y1 - self.max_y * scale
 
             index = list(self.lengths.keys()).index(c)
 
@@ -85,7 +95,7 @@ class Text:
             bytes_data += struct.pack('3f 2f', x1, y1, 0, u1, v0)
             bytes_data += struct.pack('3f 2f', x0, y1, 0, u0, v0)
 
-            offset += length
+            x_offset += length
 
         return bytes_data
 

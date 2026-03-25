@@ -11,14 +11,14 @@ Also developing [n64-blender](https://github.com/braydenoneal/n64-blender) to ma
 - [x] Toggleable free-cam mode
 - [x] Clean up / refactor files
 - [x] Refactor / rewrite collision code
-- [;] Text display
+- [x] Text display
     - [x] Generate font assets
     - [x] Move font asset generator into runtime to load into pillow image instead of file
     - [x] Correct aspect ratio
-    - [ ] Different font sizes
-    - [ ] Text position
-    - [ ] Multi-line text
-    - [ ] Allow changing text
+    - [x] Different font sizes (implemented screen size, not the font size that gets rasterized)
+    - [x] Text position
+    - [x] Multi-line text
+    - [x] Allow changing text
 - [ ] Fog
 - [ ] Order-independent transparency
 - [ ] Horizontal blur
@@ -33,7 +33,7 @@ Also developing [n64-blender](https://github.com/braydenoneal/n64-blender) to ma
 ## Model Exporter Todo
 
 - [x] Merge vertex color and alpha attributes
-- [;] Second textures
+- [;] Second textures [separate uv maps]
 - [ ] Create an extensive test scene
 - [ ] Animations
 
@@ -73,3 +73,14 @@ Also developing [n64-blender](https://github.com/braydenoneal/n64-blender) to ma
     - Y: -up, +down
     - Top left: 0, 0
     - Bottom right: 1, 1
+- Blender
+    - 3D space
+        - X: -left, +right
+        - Y: -towards camera, +away from camera
+        - Z: -down, +up
+        - Origin: 0, 0, 0
+    - UV coordinates
+        - X: -left, +right
+        - Y: -down, +up
+        - Bottom left: 0, 0
+        - Top right: 1, 1

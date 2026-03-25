@@ -53,7 +53,7 @@ class Render:
         self.program['camera'].write(self.get_camera_matrix())
         self.forest.render()
 
-        self.text.text = ', '.join(str(round(v, 2)) for v in self.player.position.to_list())
+        self.text.text = '\n'.join(str(round(v, 2)) for v in self.player.position.to_list())
         self.text.update()
         self.text.render()
 
