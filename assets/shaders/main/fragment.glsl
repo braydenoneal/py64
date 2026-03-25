@@ -23,8 +23,10 @@ uniform int transparency_mode;
 in vec3 normal;
 in vec2 uv;
 in vec4 color;
+in float depth;
 
 out vec4 out_color;
+out vec4 out_color2;
 
 float wrap(float value, int bound) {
     float out_value = value;
@@ -102,4 +104,6 @@ void main() {
     if (transparency_mode == 1) {
         out_color.a = round(out_color.a);
     }
+
+    out_color2 = vec4(vec3(depth), 1);
 }
