@@ -24,7 +24,14 @@ Also developing [n64-blender](https://github.com/braydenoneal/n64-blender) to ma
 - [ ] Horizontal blur
 - [ ] Anti-aliasing
 - [ ] Animations
+- [ ] Skybox
+- [ ] Texture scroll
+- [ ] Texture animations
+- [ ] Gouraud shading
 - [ ] Revisit decoupling frame-rate from physics rate
+- [ ] UI framework (maybe something like HTML with tailwind-like class name styling?)
+- [ ] Level loading and unloading
+- [ ] Sound
 
 ## Issues
 
@@ -36,6 +43,10 @@ Also developing [n64-blender](https://github.com/braydenoneal/n64-blender) to ma
 - [;] Second textures [separate uv maps]
 - [ ] Create an extensive test scene
 - [ ] Animations
+- [ ] Texture scroll
+- [ ] Texture animations
+- [ ] Gouraud shading
+- [ ] Defining collision faces and other level-editing features
 
 ## Model Exporter Issues
 

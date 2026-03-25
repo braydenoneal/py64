@@ -11,12 +11,10 @@ from py64.window.render.text.text import Text
 
 
 class Render:
-    def __init__(self, game: Game, width: int, height: int):
+    def __init__(self, game: Game):
         self.game = game
         self.player = game.player
         self.camera = game.camera
-        self.width = width
-        self.height = height
 
         self.ctx = moderngl.get_context()
         self.ctx.enable(moderngl.DEPTH_TEST)
@@ -30,10 +28,10 @@ class Render:
         self.forest = Model(self.ctx, self.program, '../assets/models/forest.json', vec3(42))
         self.sphere = Model(self.ctx, self.program, '../assets/models/sphere.json', self.player.scale)
 
-        self.text = Text(self.ctx, self.width, self.height)
+        self.text = Text(self.ctx)
 
     def get_camera_matrix(self, model_position: vec3 = vec3(0), model_rotation: glm.mat4x4 = glm.mat4x4(1)):
-        perspective = glm.perspective(math.radians(70.0), self.width / self.height, 0.1, 1000.0)
+        perspective = glm.perspective(math.radians(70.0), self.ctx.screen.width / self.ctx.screen.height, 0.1, 1000.0)
         rotation = self.camera.get_rotation_matrix()
         translate = glm.translate(model_position - self.camera.position)
 

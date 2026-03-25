@@ -22,4 +22,4 @@ class Window:
         self.surface = pygame.display.set_mode((self.width, self.height), flags=pygame.OPENGL | pygame.DOUBLEBUF, vsync=True)
 
         self.input = Input(self.game, self.width, self.height)
-        self.render = Render(self.game, self.width, self.height)
+        self.render = Render(self.game)

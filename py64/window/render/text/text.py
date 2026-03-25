@@ -10,14 +10,12 @@ from pyglm import glm
 
 
 class Text:
-    def __init__(self, ctx: Context, width: int, height: int, x: float = 0.0, y: float = 0.0, text: str = ' ', size: float = 8.0):
+    def __init__(self, ctx: Context, x: float = 0.0, y: float = 0.0, text: str = ' ', size: float = 8.0):
         self.ctx = ctx
-        self.width = width
-        self.height = height
-        self.text = text
-        self.size = size
         self.x = x
         self.y = y
+        self.text = text
+        self.size = size
 
         self.program = self.ctx.program(
             vertex_shader=open('../assets/shaders/font/vertex.glsl', 'r').read(),
@@ -108,5 +106,5 @@ class Text:
 
     def render(self):
         self.texture.use()
-        self.program['camera'].write(glm.scale(glm.vec3(1, self.width / self.height, 1)))
+        self.program['camera'].write(glm.scale(glm.vec3(1, self.ctx.screen.width / self.ctx.screen.height, 1)))
         self.vao.render()
