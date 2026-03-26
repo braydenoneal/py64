@@ -10,7 +10,6 @@ in vec4 in_color;
 out vec3 normal;
 out vec2 uv;
 out vec4 color;
-out float depth;
 
 void main() {
     gl_Position = camera * vec4(in_vertex, 1);
@@ -18,6 +17,4 @@ void main() {
     normal = in_normal;
     uv = in_uv;
     color = in_color;
-
-    depth = 1 - clamp(gl_Position.z / 100, 0, 1);
 }

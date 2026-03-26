@@ -2,6 +2,7 @@
 
 uniform vec3 light;
 uniform vec2 screen_size;
+uniform int pass;
 
 uniform vec3 solid_color;
 
@@ -21,16 +22,15 @@ uniform vec3 overlay_color;
 uniform float translucency;
 uniform int transparency_mode;
 
-//uniform sampler2D color_texture;
-uniform sampler2D depth_texture;
+uniform sampler2D depth_texture0;
+uniform sampler2D depth_texture1;
 
 in vec3 normal;
 in vec2 uv;
 in vec4 color;
-in float depth;
 
 out vec4 out_color;
-out vec4 out_color2;
+out float out_depth;
 
 float wrap(float value, int bound) {
     float out_value = value;
@@ -109,10 +109,23 @@ void main() {
         out_color.a = round(out_color.a);
     }
 
-    out_color2 = vec4(vec3(depth), 1);
+    float d = 1.0 - (gl_FragCoord.z / gl_FragCoord.w / 1000.0);
 
-    if (depth < texture(depth_texture, gl_FragCoord.xy / screen_size).r) {
-        out_color = vec4(0);
-        // discard;
+    if (pass == 0) {
+        out_depth = d;
+    } else if (pass == 1) {
+        out_depth = d;
+
+        if (d < texture(depth_texture0, gl_FragCoord.xy / screen_size).r) {
+            discard;
+        }
+    } else if (pass == 2) {
+        out_depth = d;
+
+        if (d < texture(depth_texture0, gl_FragCoord.xy / screen_size).r ||
+        d > texture(depth_texture1, gl_FragCoord.xy / screen_size).r
+        ) {
+            discard;
+        }
     }
 }

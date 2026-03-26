@@ -28,12 +28,25 @@ class Render:
             fragment_shader=open('../assets/shaders/test/fragment.glsl', 'r').read(),
         )
 
-        self.empty_texture_data = np.zeros(self.screen_size).astype('f4').tobytes()
         self.color_texture = self.ctx.texture(self.screen_size, 4)
-        self.texture2 = self.ctx.texture(self.screen_size, 4)
-        self.texture3 = self.ctx.texture(self.screen_size, 4)
-        self.depth_texture = self.ctx.depth_texture(self.screen_size)
         self.color_texture.filter = (moderngl.NEAREST, moderngl.NEAREST)
+        self.depth_texture = self.ctx.texture(self.screen_size, 1, dtype='f4')
+        self.depth_texture.filter = (moderngl.NEAREST, moderngl.NEAREST)
+
+        self.color_texture_0 = self.ctx.texture(self.screen_size, 4)
+        self.color_texture_0.filter = (moderngl.NEAREST, moderngl.NEAREST)
+        self.depth_texture_0 = self.ctx.texture(self.screen_size, 1, dtype='f4')
+        self.depth_texture_0.filter = (moderngl.NEAREST, moderngl.NEAREST)
+
+        self.color_texture_1 = self.ctx.texture(self.screen_size, 1, dtype='f4')
+        self.color_texture_1.filter = (moderngl.NEAREST, moderngl.NEAREST)
+        self.depth_texture_1 = self.ctx.texture(self.screen_size, 4)
+        self.depth_texture_1.filter = (moderngl.NEAREST, moderngl.NEAREST)
+
+        self.fbo = self.ctx.framebuffer([
+            self.color_texture,
+            self.depth_texture,
+        ], self.ctx.depth_renderbuffer(self.screen_size))
 
         data = np.array([
             -1, -1, 0, 0, 0,
@@ -49,8 +62,6 @@ class Render:
         self.vao = self.ctx.vertex_array(self.program2, [
             (self.vbo, '3f 2f', 'in_vertex', 'in_uv'),
         ])
-
-        self.fbo = self.ctx.framebuffer([self.color_texture, self.texture2], self.depth_texture)
 
         self.program = self.ctx.program(
             vertex_shader=open('../assets/shaders/main/vertex.glsl', 'r').read(),
@@ -68,15 +79,11 @@ class Render:
         return perspective * rotation * translate * model_rotation
 
     def main_loop(self):
+        # Pass 0
         self.fbo.use()
         self.ctx.clear()
 
-        # self.program['color_texture'] = 2
-        # self.texture2.use(2)
-
-        self.texture3.write(self.empty_texture_data)
-        self.program['depth_texture'] = 2
-        self.texture3.use(2)
+        self.program['pass'] = 0
 
         self.program['light'].write(vec3(-0.1, 0.55, 0.35))
         self.program['screen_size'] = self.screen_size
@@ -90,12 +97,31 @@ class Render:
         self.program['camera'].write(self.get_camera_matrix())
         self.forest.render()
 
-        self.texture3.write(self.texture2.read())
+        # Write depth texture
+        self.depth_texture_0.write(self.depth_texture.read())
+        self.program['depth_texture0'] = 2
+        self.depth_texture_0.use(2)
 
+        # Pass 1
         self.fbo.use()
         self.ctx.clear()
+
+        self.program['pass'] = 1
         self.forest.render_transparent()
 
+        # # Write depth texture
+        # self.depth_texture_1.write(self.depth_texture.read())
+        # self.program['depth_texture1'] = 3
+        # self.depth_texture_1.use(3)
+        #
+        # # Pass 2
+        # self.fbo.use()
+        # self.ctx.clear()
+        #
+        # self.program['pass'] = 2
+        # self.forest.render_transparent()
+
+        # Render
         self.ctx.screen.use()
         self.ctx.clear()
 
