@@ -22,11 +22,15 @@ class Model:
             materials_dict = json.load(file)
 
         self.materials: list[Material] = []
+        self.transparent_materials: list[Material] = []
 
         for material_dict in materials_dict.values():
-            self.materials.append(Material(ctx, program, material_dict, scale))
+            material = Material(ctx, program, material_dict, scale)
 
-        self.materials.sort(key=lambda m: 'transparency' in m.material_dict)
+            if 'transparency' in material_dict:
+                self.transparent_materials.append(material)
+            else:
+                self.materials.append(material)
 
     def update(self):
         for material in self.materials:
@@ -34,6 +38,10 @@ class Model:
 
     def render(self):
         for material in self.materials:
+            material.render()
+
+    def render_transparent(self):
+        for material in self.transparent_materials:
             material.render()
 
 
@@ -198,8 +206,6 @@ class Material:
         self.program['transparency_mode'] = 0
 
         if 'transparency' in self.material_dict:
-            self.ctx.enable(moderngl.BLEND)
-            self.ctx.blend_func = (moderngl.SRC_ALPHA, moderngl.ONE_MINUS_SRC_ALPHA)
             self.program['translucency'] = self.material_dict['transparency']['translucency']
 
             if self.material_dict['transparency']['mode'] == 'cutout':
