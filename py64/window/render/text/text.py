@@ -10,7 +10,7 @@ from pyglm import glm
 
 
 class Text:
-    def __init__(self, ctx: Context, x: float = 0.0, y: float = 0.0, text: str = ' ', size: float = 8.0):
+    def __init__(self, ctx: Context, x: float = 0.0, y: float = 0.0, text: str = ' ', size: float = 4.0):
         self.ctx = ctx
         self.x = x
         self.y = y
@@ -74,7 +74,7 @@ class Text:
             x0 = x_offset - 1.0 + self.x * 2
             x1 = x0 + length
 
-            y1 = 1.0 - y_offset - self.y * 2
+            y1 = y_offset - self.y * 2
             y0 = y1 - self.max_y * scale
 
             index = list(self.lengths.keys()).index(c)

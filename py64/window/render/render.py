@@ -9,6 +9,7 @@ from pyglm.glm import vec3
 
 from py64.game.game import Game
 from py64.window.render.model.model import Model
+from py64.window.render.text.text import Text
 
 
 class Render:
@@ -67,6 +68,8 @@ class Render:
         self.forest = Model(self.ctx, self.screen_program, '../assets/models/forest.json', vec3(42))
         self.sphere = Model(self.ctx, self.screen_program, '../assets/models/sphere.json', self.player.scale)
 
+        self.text = Text(self.ctx, 0, 0)
+
     def get_camera_matrix(self, model_position: vec3 = vec3(0), model_rotation: glm.mat4x4 = glm.mat4x4(1)):
         perspective = glm.perspective(math.radians(70.0), self.aspect_ratio, 0.1, 1000.0)
         rotation = self.camera.get_rotation_matrix()
@@ -75,6 +78,10 @@ class Render:
         return perspective * rotation * translate * model_rotation
 
     def main_loop(self):
+        self.ctx.enable(moderngl.DEPTH_TEST)
+        self.ctx.enable(moderngl.CULL_FACE)
+        self.ctx.disable(moderngl.BLEND)
+
         for index, fbo in enumerate(self.fbo_list):
             fbo.use()
             self.ctx.clear()
@@ -102,6 +109,10 @@ class Render:
 
                 self.forest.render_transparent()
 
+        self.ctx.disable(moderngl.DEPTH_TEST)
+        self.ctx.disable(moderngl.CULL_FACE)
+        self.ctx.enable(moderngl.BLEND)
+
         self.ctx.screen.use()
         self.ctx.clear()
 
@@ -110,5 +121,9 @@ class Render:
             fbo.color_attachments[0].use(index)
 
         self.vao.render()
+
+        self.text.text = '\n'.join(str(round(v, 2)) for v in self.player.position.to_list())
+        self.text.update()
+        self.text.render()
 
         pygame.display.flip()
