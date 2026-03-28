@@ -24,7 +24,7 @@ class Render:
         self.ctx.enable(moderngl.DEPTH_TEST)
         self.ctx.enable(moderngl.CULL_FACE)
 
-        self.program2 = self.ctx.program(
+        self.program = self.ctx.program(
             vertex_shader=open('../assets/shaders/test/vertex.glsl', 'r').read(),
             fragment_shader=open('../assets/shaders/test/fragment.glsl', 'r').read(),
         )
@@ -44,58 +44,6 @@ class Render:
                 depth_texture,
             ], depth_render_buffer))
 
-        # self.depth_render_buffer = self.ctx.depth_renderbuffer(self.screen_size)
-        #
-        # self.color_texture_0 = self.ctx.texture(self.screen_size, 4)
-        # self.color_texture_0.filter = (moderngl.NEAREST, moderngl.NEAREST)
-        # self.depth_texture_0 = self.ctx.texture(self.screen_size, 1, dtype='f4')
-        # self.depth_texture_0.filter = (moderngl.NEAREST, moderngl.NEAREST)
-        #
-        # self.fbo0 = self.ctx.framebuffer([
-        #     self.color_texture_0,
-        #     self.depth_texture_0,
-        # ], self.depth_render_buffer)
-        #
-        # self.color_texture_1 = self.ctx.texture(self.screen_size, 4)
-        # self.color_texture_1.filter = (moderngl.NEAREST, moderngl.NEAREST)
-        # self.depth_texture_1 = self.ctx.texture(self.screen_size, 1, dtype='f4')
-        # self.depth_texture_1.filter = (moderngl.NEAREST, moderngl.NEAREST)
-        #
-        # self.fbo1 = self.ctx.framebuffer([
-        #     self.color_texture_1,
-        #     self.depth_texture_1,
-        # ], self.depth_render_buffer)
-        #
-        # self.color_texture_2 = self.ctx.texture(self.screen_size, 4)
-        # self.color_texture_2.filter = (moderngl.NEAREST, moderngl.NEAREST)
-        # self.depth_texture_2 = self.ctx.texture(self.screen_size, 1, dtype='f4')
-        # self.depth_texture_2.filter = (moderngl.NEAREST, moderngl.NEAREST)
-        #
-        # self.fbo2 = self.ctx.framebuffer([
-        #     self.color_texture_2,
-        #     self.depth_texture_2,
-        # ], self.depth_render_buffer)
-        #
-        # self.color_texture_3 = self.ctx.texture(self.screen_size, 4)
-        # self.color_texture_3.filter = (moderngl.NEAREST, moderngl.NEAREST)
-        # self.depth_texture_3 = self.ctx.texture(self.screen_size, 1, dtype='f4')
-        # self.depth_texture_3.filter = (moderngl.NEAREST, moderngl.NEAREST)
-        #
-        # self.fbo3 = self.ctx.framebuffer([
-        #     self.color_texture_3,
-        #     self.depth_texture_3,
-        # ], self.depth_render_buffer)
-        #
-        # self.color_texture_4 = self.ctx.texture(self.screen_size, 4)
-        # self.color_texture_4.filter = (moderngl.NEAREST, moderngl.NEAREST)
-        # self.depth_texture_4 = self.ctx.texture(self.screen_size, 1, dtype='f4')
-        # self.depth_texture_4.filter = (moderngl.NEAREST, moderngl.NEAREST)
-        #
-        # self.fbo4 = self.ctx.framebuffer([
-        #     self.color_texture_4,
-        #     self.depth_texture_4,
-        # ], self.depth_render_buffer)
-
         data = np.array([
             -1, -1, 0, 0, 0,
             +1, -1, 0, 1, 0,
@@ -107,17 +55,17 @@ class Render:
 
         self.vbo = self.ctx.buffer(data)
 
-        self.vao = self.ctx.vertex_array(self.program2, [
+        self.vao = self.ctx.vertex_array(self.program, [
             (self.vbo, '3f 2f', 'in_vertex', 'in_uv'),
         ])
 
-        self.program = self.ctx.program(
+        self.screen_program = self.ctx.program(
             vertex_shader=open('../assets/shaders/main/vertex.glsl', 'r').read(),
             fragment_shader=open('../assets/shaders/main/fragment.glsl', 'r').read(),
         )
 
-        self.forest = Model(self.ctx, self.program, '../assets/models/forest.json', vec3(42))
-        self.sphere = Model(self.ctx, self.program, '../assets/models/sphere.json', self.player.scale)
+        self.forest = Model(self.ctx, self.screen_program, '../assets/models/forest.json', vec3(42))
+        self.sphere = Model(self.ctx, self.screen_program, '../assets/models/sphere.json', self.player.scale)
 
     def get_camera_matrix(self, model_position: vec3 = vec3(0), model_rotation: glm.mat4x4 = glm.mat4x4(1)):
         perspective = glm.perspective(math.radians(70.0), self.aspect_ratio, 0.1, 1000.0)
@@ -127,119 +75,39 @@ class Render:
         return perspective * rotation * translate * model_rotation
 
     def main_loop(self):
-        # # Pass 0
-        # self.fbo0.use()
-        # self.ctx.clear()
-        #
-        # self.program['pass'] = 0
-        #
-        # self.program['light'].write(vec3(-0.1, 0.55, 0.35))
-        # self.program['screen_size'] = self.screen_size
-        #
-        # self.program['camera'].write(self.get_camera_matrix(
-        #     self.player.position,
-        #     glm.rotate(self.player.y_angle + math.radians(180), vec3(0, self.aspect_ratio, 0)),
-        # ))
-        # self.sphere.render()
-        #
-        # self.program['camera'].write(self.get_camera_matrix())
-        # self.forest.render()
-
         for index, fbo in enumerate(self.fbo_list):
             fbo.use()
             self.ctx.clear()
 
-            self.program['pass'] = index if index < 2 else 2
+            self.screen_program['pass'] = index if index < 2 else 2
 
             if index == 0:
-                self.program['light'].write(vec3(-0.1, 0.55, 0.35))
-                self.program['screen_size'] = self.screen_size
+                self.screen_program['light'].write(vec3(-0.1, 0.55, 0.35))
+                self.screen_program['screen_size'] = self.screen_size
 
-                self.program['camera'].write(self.get_camera_matrix(
+                self.screen_program['camera'].write(self.get_camera_matrix(
                     self.player.position,
                     glm.rotate(self.player.y_angle + math.radians(180), vec3(0, self.aspect_ratio, 0)),
                 ))
                 self.sphere.render()
 
-                self.program['camera'].write(self.get_camera_matrix())
+                self.screen_program['camera'].write(self.get_camera_matrix())
                 self.forest.render()
-                continue
+            else:
+                self.screen_program['opaque_depth_texture'] = 2
+                self.fbo_list[0].color_attachments[1].use(2)
 
-            self.program['depth_texture0'] = 2
-            self.fbo_list[0].color_attachments[1].use(2)
+                self.screen_program['previous_layer_depth_texture'] = 3
+                self.fbo_list[index - 1].color_attachments[1].use(3)
 
-            self.program['depth_texture1'] = 3
-            self.fbo_list[index - 1].color_attachments[1].use(3)
+                self.forest.render_transparent()
 
-            self.forest.render_transparent()
-
-        # # Pass 1
-        # self.fbo1.use()
-        # self.ctx.clear()
-        #
-        # self.program['depth_texture0'] = 2
-        # self.depth_texture_0.use(2)
-        #
-        # self.program['pass'] = 1
-        # self.forest.render_transparent()
-        #
-        # # Pass 2
-        # self.fbo2.use()
-        # self.ctx.clear()
-        #
-        # self.program['depth_texture0'] = 2
-        # self.depth_texture_0.use(2)
-        #
-        # self.program['depth_texture1'] = 3
-        # self.depth_texture_1.use(3)
-        #
-        # self.program['pass'] = 2
-        # self.forest.render_transparent()
-        #
-        # # Pass 3
-        # self.fbo3.use()
-        # self.ctx.clear()
-        #
-        # self.program['depth_texture0'] = 2
-        # self.depth_texture_0.use(2)
-        #
-        # self.program['depth_texture1'] = 3
-        # self.depth_texture_2.use(3)
-        #
-        # self.program['pass'] = 2
-        # self.forest.render_transparent()
-        #
-        # # Pass 4
-        # self.fbo4.use()
-        # self.ctx.clear()
-        #
-        # self.program['depth_texture0'] = 2
-        # self.depth_texture_0.use(2)
-        #
-        # self.program['depth_texture1'] = 3
-        # self.depth_texture_3.use(3)
-        #
-        # self.program['pass'] = 2
-        # self.forest.render_transparent()
-
-        # Render
         self.ctx.screen.use()
         self.ctx.clear()
 
         for index, fbo in enumerate(self.fbo_list):
-            self.program2[f'in_texture_{index}'] = index
+            self.program[f'in_texture_{index}'] = index
             fbo.color_attachments[0].use(index)
-
-        # self.program2['in_texture_0'] = 0
-        # self.color_texture_0.use(0)
-        # self.program2['in_texture_1'] = 1
-        # self.color_texture_1.use(1)
-        # self.program2['in_texture_2'] = 2
-        # self.color_texture_2.use(2)
-        # self.program2['in_texture_3'] = 3
-        # self.color_texture_3.use(3)
-        # self.program2['in_texture_4'] = 4
-        # self.color_texture_4.use(4)
 
         self.vao.render()
 

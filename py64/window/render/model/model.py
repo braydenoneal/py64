@@ -206,8 +206,6 @@ class Material:
         self.program['transparency_mode'] = 0
 
         if 'transparency' in self.material_dict:
-            # self.ctx.enable(moderngl.BLEND)
-            # self.ctx.blend_func = (moderngl.SRC_ALPHA, moderngl.ONE_MINUS_SRC_ALPHA)
             self.program['translucency'] = self.material_dict['transparency']['translucency']
 
             if self.material_dict['transparency']['mode'] == 'cutout':

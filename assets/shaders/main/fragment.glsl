@@ -22,8 +22,8 @@ uniform vec3 overlay_color;
 uniform float translucency;
 uniform int transparency_mode;
 
-uniform sampler2D depth_texture0;
-uniform sampler2D depth_texture1;
+uniform sampler2D opaque_depth_texture;
+uniform sampler2D previous_layer_depth_texture;
 
 in vec3 normal;
 in vec2 uv;
@@ -116,13 +116,14 @@ void main() {
     } else if (pass == 1) {
         out_depth = d;
 
-        if (d <= texture(depth_texture0, gl_FragCoord.xy / screen_size).r) {
+        if (d <= texture(opaque_depth_texture, gl_FragCoord.xy / screen_size).r) {
             discard;
         }
     } else if (pass == 2) {
         out_depth = d;
 
-        if (d <= texture(depth_texture0, gl_FragCoord.xy / screen_size).r || d >= texture(depth_texture1, gl_FragCoord.xy / screen_size).r) {
+        if (d <= texture(opaque_depth_texture, gl_FragCoord.xy / screen_size).r ||
+        d >= texture(previous_layer_depth_texture, gl_FragCoord.xy / screen_size).r) {
             discard;
         }
     }
