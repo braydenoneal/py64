@@ -19,8 +19,8 @@ Also developing [n64-blender](https://github.com/braydenoneal/n64-blender) to ma
     - [x] Text position
     - [x] Multi-line text
     - [x] Allow changing text
+- [x] Order-independent transparency
 - [ ] Fog
-- [ ] Order-independent transparency
 - [ ] Horizontal blur
 - [ ] Anti-aliasing
 - [ ] Animations

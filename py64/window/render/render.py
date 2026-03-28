@@ -3,6 +3,7 @@ import math
 import moderngl
 import numpy as np
 import pygame
+from moderngl import Framebuffer
 from pyglm import glm
 from pyglm.glm import vec3
 
@@ -28,25 +29,72 @@ class Render:
             fragment_shader=open('../assets/shaders/test/fragment.glsl', 'r').read(),
         )
 
-        self.color_texture = self.ctx.texture(self.screen_size, 4)
-        self.color_texture.filter = (moderngl.NEAREST, moderngl.NEAREST)
-        self.depth_texture = self.ctx.texture(self.screen_size, 1, dtype='f4')
-        self.depth_texture.filter = (moderngl.NEAREST, moderngl.NEAREST)
+        self.fbo_list: list[Framebuffer] = []
+        depth_render_buffer = self.ctx.depth_renderbuffer(self.screen_size)
 
-        self.color_texture_0 = self.ctx.texture(self.screen_size, 4)
-        self.color_texture_0.filter = (moderngl.NEAREST, moderngl.NEAREST)
-        self.depth_texture_0 = self.ctx.texture(self.screen_size, 1, dtype='f4')
-        self.depth_texture_0.filter = (moderngl.NEAREST, moderngl.NEAREST)
+        for depth_layer in range(5):
+            color_texture = self.ctx.texture(self.screen_size, 4)
+            color_texture.filter = (moderngl.NEAREST, moderngl.NEAREST)
 
-        self.color_texture_1 = self.ctx.texture(self.screen_size, 1, dtype='f4')
-        self.color_texture_1.filter = (moderngl.NEAREST, moderngl.NEAREST)
-        self.depth_texture_1 = self.ctx.texture(self.screen_size, 4)
-        self.depth_texture_1.filter = (moderngl.NEAREST, moderngl.NEAREST)
+            depth_texture = self.ctx.texture(self.screen_size, 1, dtype='f4')
+            depth_texture.filter = (moderngl.NEAREST, moderngl.NEAREST)
 
-        self.fbo = self.ctx.framebuffer([
-            self.color_texture,
-            self.depth_texture,
-        ], self.ctx.depth_renderbuffer(self.screen_size))
+            self.fbo_list.append(self.ctx.framebuffer([
+                color_texture,
+                depth_texture,
+            ], depth_render_buffer))
+
+        # self.depth_render_buffer = self.ctx.depth_renderbuffer(self.screen_size)
+        #
+        # self.color_texture_0 = self.ctx.texture(self.screen_size, 4)
+        # self.color_texture_0.filter = (moderngl.NEAREST, moderngl.NEAREST)
+        # self.depth_texture_0 = self.ctx.texture(self.screen_size, 1, dtype='f4')
+        # self.depth_texture_0.filter = (moderngl.NEAREST, moderngl.NEAREST)
+        #
+        # self.fbo0 = self.ctx.framebuffer([
+        #     self.color_texture_0,
+        #     self.depth_texture_0,
+        # ], self.depth_render_buffer)
+        #
+        # self.color_texture_1 = self.ctx.texture(self.screen_size, 4)
+        # self.color_texture_1.filter = (moderngl.NEAREST, moderngl.NEAREST)
+        # self.depth_texture_1 = self.ctx.texture(self.screen_size, 1, dtype='f4')
+        # self.depth_texture_1.filter = (moderngl.NEAREST, moderngl.NEAREST)
+        #
+        # self.fbo1 = self.ctx.framebuffer([
+        #     self.color_texture_1,
+        #     self.depth_texture_1,
+        # ], self.depth_render_buffer)
+        #
+        # self.color_texture_2 = self.ctx.texture(self.screen_size, 4)
+        # self.color_texture_2.filter = (moderngl.NEAREST, moderngl.NEAREST)
+        # self.depth_texture_2 = self.ctx.texture(self.screen_size, 1, dtype='f4')
+        # self.depth_texture_2.filter = (moderngl.NEAREST, moderngl.NEAREST)
+        #
+        # self.fbo2 = self.ctx.framebuffer([
+        #     self.color_texture_2,
+        #     self.depth_texture_2,
+        # ], self.depth_render_buffer)
+        #
+        # self.color_texture_3 = self.ctx.texture(self.screen_size, 4)
+        # self.color_texture_3.filter = (moderngl.NEAREST, moderngl.NEAREST)
+        # self.depth_texture_3 = self.ctx.texture(self.screen_size, 1, dtype='f4')
+        # self.depth_texture_3.filter = (moderngl.NEAREST, moderngl.NEAREST)
+        #
+        # self.fbo3 = self.ctx.framebuffer([
+        #     self.color_texture_3,
+        #     self.depth_texture_3,
+        # ], self.depth_render_buffer)
+        #
+        # self.color_texture_4 = self.ctx.texture(self.screen_size, 4)
+        # self.color_texture_4.filter = (moderngl.NEAREST, moderngl.NEAREST)
+        # self.depth_texture_4 = self.ctx.texture(self.screen_size, 1, dtype='f4')
+        # self.depth_texture_4.filter = (moderngl.NEAREST, moderngl.NEAREST)
+        #
+        # self.fbo4 = self.ctx.framebuffer([
+        #     self.color_texture_4,
+        #     self.depth_texture_4,
+        # ], self.depth_render_buffer)
 
         data = np.array([
             -1, -1, 0, 0, 0,
@@ -79,44 +127,97 @@ class Render:
         return perspective * rotation * translate * model_rotation
 
     def main_loop(self):
-        # Pass 0
-        self.fbo.use()
-        self.ctx.clear()
+        # # Pass 0
+        # self.fbo0.use()
+        # self.ctx.clear()
+        #
+        # self.program['pass'] = 0
+        #
+        # self.program['light'].write(vec3(-0.1, 0.55, 0.35))
+        # self.program['screen_size'] = self.screen_size
+        #
+        # self.program['camera'].write(self.get_camera_matrix(
+        #     self.player.position,
+        #     glm.rotate(self.player.y_angle + math.radians(180), vec3(0, self.aspect_ratio, 0)),
+        # ))
+        # self.sphere.render()
+        #
+        # self.program['camera'].write(self.get_camera_matrix())
+        # self.forest.render()
 
-        self.program['pass'] = 0
+        for index, fbo in enumerate(self.fbo_list):
+            fbo.use()
+            self.ctx.clear()
 
-        self.program['light'].write(vec3(-0.1, 0.55, 0.35))
-        self.program['screen_size'] = self.screen_size
+            self.program['pass'] = index if index < 2 else 2
 
-        self.program['camera'].write(self.get_camera_matrix(
-            self.player.position,
-            glm.rotate(self.player.y_angle + math.radians(180), vec3(0, self.aspect_ratio, 0)),
-        ))
-        self.sphere.render()
+            if index == 0:
+                self.program['light'].write(vec3(-0.1, 0.55, 0.35))
+                self.program['screen_size'] = self.screen_size
 
-        self.program['camera'].write(self.get_camera_matrix())
-        self.forest.render()
+                self.program['camera'].write(self.get_camera_matrix(
+                    self.player.position,
+                    glm.rotate(self.player.y_angle + math.radians(180), vec3(0, self.aspect_ratio, 0)),
+                ))
+                self.sphere.render()
 
-        # Write depth texture
-        self.depth_texture_0.write(self.depth_texture.read())
-        self.program['depth_texture0'] = 2
-        self.depth_texture_0.use(2)
+                self.program['camera'].write(self.get_camera_matrix())
+                self.forest.render()
+                continue
 
-        # Pass 1
-        self.fbo.use()
-        self.ctx.clear()
+            self.program['depth_texture0'] = 2
+            self.fbo_list[0].color_attachments[1].use(2)
 
-        self.program['pass'] = 1
-        self.forest.render_transparent()
+            self.program['depth_texture1'] = 3
+            self.fbo_list[index - 1].color_attachments[1].use(3)
 
-        # # Write depth texture
-        # self.depth_texture_1.write(self.depth_texture.read())
+            self.forest.render_transparent()
+
+        # # Pass 1
+        # self.fbo1.use()
+        # self.ctx.clear()
+        #
+        # self.program['depth_texture0'] = 2
+        # self.depth_texture_0.use(2)
+        #
+        # self.program['pass'] = 1
+        # self.forest.render_transparent()
+        #
+        # # Pass 2
+        # self.fbo2.use()
+        # self.ctx.clear()
+        #
+        # self.program['depth_texture0'] = 2
+        # self.depth_texture_0.use(2)
+        #
         # self.program['depth_texture1'] = 3
         # self.depth_texture_1.use(3)
         #
-        # # Pass 2
-        # self.fbo.use()
+        # self.program['pass'] = 2
+        # self.forest.render_transparent()
+        #
+        # # Pass 3
+        # self.fbo3.use()
         # self.ctx.clear()
+        #
+        # self.program['depth_texture0'] = 2
+        # self.depth_texture_0.use(2)
+        #
+        # self.program['depth_texture1'] = 3
+        # self.depth_texture_2.use(3)
+        #
+        # self.program['pass'] = 2
+        # self.forest.render_transparent()
+        #
+        # # Pass 4
+        # self.fbo4.use()
+        # self.ctx.clear()
+        #
+        # self.program['depth_texture0'] = 2
+        # self.depth_texture_0.use(2)
+        #
+        # self.program['depth_texture1'] = 3
+        # self.depth_texture_3.use(3)
         #
         # self.program['pass'] = 2
         # self.forest.render_transparent()
@@ -125,7 +226,21 @@ class Render:
         self.ctx.screen.use()
         self.ctx.clear()
 
-        self.color_texture.use()
+        for index, fbo in enumerate(self.fbo_list):
+            self.program2[f'in_texture_{index}'] = index
+            fbo.color_attachments[0].use(index)
+
+        # self.program2['in_texture_0'] = 0
+        # self.color_texture_0.use(0)
+        # self.program2['in_texture_1'] = 1
+        # self.color_texture_1.use(1)
+        # self.program2['in_texture_2'] = 2
+        # self.color_texture_2.use(2)
+        # self.program2['in_texture_3'] = 3
+        # self.color_texture_3.use(3)
+        # self.program2['in_texture_4'] = 4
+        # self.color_texture_4.use(4)
+
         self.vao.render()
 
         pygame.display.flip()

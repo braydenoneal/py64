@@ -116,15 +116,13 @@ void main() {
     } else if (pass == 1) {
         out_depth = d;
 
-        if (d < texture(depth_texture0, gl_FragCoord.xy / screen_size).r) {
+        if (d <= texture(depth_texture0, gl_FragCoord.xy / screen_size).r) {
             discard;
         }
     } else if (pass == 2) {
         out_depth = d;
 
-        if (d < texture(depth_texture0, gl_FragCoord.xy / screen_size).r ||
-        d > texture(depth_texture1, gl_FragCoord.xy / screen_size).r
-        ) {
+        if (d <= texture(depth_texture0, gl_FragCoord.xy / screen_size).r || d >= texture(depth_texture1, gl_FragCoord.xy / screen_size).r) {
             discard;
         }
     }
