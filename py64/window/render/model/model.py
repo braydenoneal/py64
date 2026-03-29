@@ -16,16 +16,26 @@ class Model:
         self.ctx = ctx
         self.program = program
 
-        materials_dict: dict[str, Any] = {}
+        model_dict: dict[str, Any] = {}
 
         with open(path) as file:
-            materials_dict = json.load(file)
+            model_dict = json.load(file)
+
+        bones_dict: dict[str, Any] = {}
+
+        if 'bones' in model_dict.keys():
+            bones_dict = model_dict['bones']
+
+        materials_dict: dict[str, Any] = {}
+
+        if 'materials' in model_dict.keys():
+            materials_dict = model_dict['materials']
 
         self.materials: list[Material] = []
         self.transparent_materials: list[Material] = []
 
         for material_dict in materials_dict.values():
-            material = Material(ctx, program, material_dict, scale)
+            material = Material(ctx, program, material_dict, bones_dict, scale)
 
             if 'transparency' in material_dict:
                 self.transparent_materials.append(material)
@@ -46,10 +56,11 @@ class Model:
 
 
 class Material:
-    def __init__(self, ctx: Context, program: Program, material_dict: dict[str, Any], scale: vec3):
+    def __init__(self, ctx: Context, program: Program, material_dict: dict[str, Any], bones_dict: dict[str, Any], scale: vec3):
         self.ctx = ctx
         self.program = program
         self.material_dict = material_dict
+        self.bones_dict = bones_dict
         self.scale = scale
 
         self.texture_a: Texture | None = None
@@ -65,7 +76,7 @@ class Material:
         self.vbo = self.ctx.buffer(self.bytes)
 
         self.vao = self.ctx.vertex_array(self.program, [
-            (self.vbo, '3f 3f 2f 4f', 'in_vertex', 'in_normal', 'in_uv', 'in_color'),
+            (self.vbo, '3f 3f 2f 4f 4i 4f', 'in_vertex', 'in_normal', 'in_uv', 'in_color', 'in_bone_indices', 'in_weights'),
         ])
 
     def create_texture(self, name: str):
@@ -86,53 +97,34 @@ class Material:
         bytes_data = b''
 
         for face in self.material_dict['faces']:
-            bytes_data += struct.pack(
-                '3f 3f 2f 4f',
-                face['a']['x'] * self.scale.x,
-                face['a']['y'] * self.scale.y,
-                face['a']['z'] * self.scale.z,
-                face['normal']['x'],
-                face['normal']['y'],
-                face['normal']['z'],
-                face['a']['u'] if 'texture' in self.material_dict.keys() else 0.0,
-                face['a']['v'] if 'texture' in self.material_dict.keys() else 0.0,
-                face['a']['color']['r'] if self.material_dict['vertex_colors'] else 1.0,
-                face['a']['color']['g'] if self.material_dict['vertex_colors'] else 1.0,
-                face['a']['color']['b'] if self.material_dict['vertex_colors'] else 1.0,
-                face['a']['color']['a'] if self.material_dict['vertex_colors'] and 'transparency' in self.material_dict.keys() else 1.0,
-            )
+            for name in ('a', 'b', 'c'):
+                vertex = face[name]
 
-            bytes_data += struct.pack(
-                '3f 3f 2f 4f',
-                face['b']['x'] * self.scale.x,
-                face['b']['y'] * self.scale.y,
-                face['b']['z'] * self.scale.z,
-                face['normal']['x'],
-                face['normal']['y'],
-                face['normal']['z'],
-                face['b']['u'] if 'texture' in self.material_dict.keys() else 0.0,
-                face['b']['v'] if 'texture' in self.material_dict.keys() else 0.0,
-                face['b']['color']['r'] if self.material_dict['vertex_colors'] else 1.0,
-                face['b']['color']['g'] if self.material_dict['vertex_colors'] else 1.0,
-                face['b']['color']['b'] if self.material_dict['vertex_colors'] else 1.0,
-                face['b']['color']['a'] if self.material_dict['vertex_colors'] and 'transparency' in self.material_dict.keys() else 1.0,
-            )
+                bone_indices = [-1, -1, -1, -1]
+                weights = [0.0, 0.0, 0.0, 0.0]
 
-            bytes_data += struct.pack(
-                '3f 3f 2f 4f',
-                face['c']['x'] * self.scale.x,
-                face['c']['y'] * self.scale.y,
-                face['c']['z'] * self.scale.z,
-                face['normal']['x'],
-                face['normal']['y'],
-                face['normal']['z'],
-                face['c']['u'] if 'texture' in self.material_dict.keys() else 0.0,
-                face['c']['v'] if 'texture' in self.material_dict.keys() else 0.0,
-                face['c']['color']['r'] if self.material_dict['vertex_colors'] else 1.0,
-                face['c']['color']['g'] if self.material_dict['vertex_colors'] else 1.0,
-                face['c']['color']['b'] if self.material_dict['vertex_colors'] else 1.0,
-                face['c']['color']['a'] if self.material_dict['vertex_colors'] and 'transparency' in self.material_dict.keys() else 1.0,
-            )
+                if 'weights' in vertex.keys():
+                    for index, weight in enumerate(vertex['weights']):
+                        bone_indices[index] = list(self.bones_dict.keys()).index(weight['bone'])
+                        weights[index] = weight['weight']
+
+                bytes_data += struct.pack(
+                    '3f 3f 2f 4f 4i 4f',
+                    vertex['x'] * self.scale.x,
+                    vertex['y'] * self.scale.y,
+                    vertex['z'] * self.scale.z,
+                    face['normal']['x'],
+                    face['normal']['y'],
+                    face['normal']['z'],
+                    vertex['u'] if 'texture' in self.material_dict.keys() else 0.0,
+                    vertex['v'] if 'texture' in self.material_dict.keys() else 0.0,
+                    vertex['color']['r'] if self.material_dict['vertex_colors'] else 1.0,
+                    vertex['color']['g'] if self.material_dict['vertex_colors'] else 1.0,
+                    vertex['color']['b'] if self.material_dict['vertex_colors'] else 1.0,
+                    vertex['color']['a'] if self.material_dict['vertex_colors'] and 'transparency' in self.material_dict.keys() else 1.0,
+                    *bone_indices,
+                    *weights,
+                )
 
         return bytes_data
 

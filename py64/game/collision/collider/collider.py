@@ -10,14 +10,14 @@ from py64.game.player.player import Player
 
 class Collider:
     def __init__(self, path: str, scale: vec3 = vec3(1)):
-        self.materials_dict: dict[str, Any] = {}
+        self.model_dict: dict[str, Any] = {}
 
         with open(path) as file:
-            self.materials_dict = json.load(file)
+            self.model_dict = json.load(file)
 
         self.collision_faces: list[Face] = []
 
-        for material in self.materials_dict.values():
+        for material in self.model_dict['materials'].values():
             for face in material['faces']:
                 self.collision_faces.append(Face(
                     vec3(

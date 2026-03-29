@@ -66,7 +66,7 @@ class Render:
         )
 
         self.forest = Model(self.ctx, self.screen_program, '../assets/models/forest.json', vec3(42))
-        self.sphere = Model(self.ctx, self.screen_program, '../assets/models/sphere.json', self.player.scale)
+        self.sphere = Model(self.ctx, self.screen_program, '../assets/models/player.json', self.player.scale)
 
         self.text = Text(self.ctx, 0, 0)
 
