@@ -22,7 +22,7 @@ void main() {
             continue;
         }
 
-        position += bones[index] * vec4(in_vertex, 1) * in_weights[i];
+        position += (bones[index] * vec4(in_vertex, 1)) * in_weights[i];
     }
 
     gl_Position = camera * vec4(position.xyz, 1);
