@@ -12,23 +12,13 @@ class Model:
         self.ctx = ctx
         self.program = program
 
-        model_dict: dict[str, Any] = {}
+        self.model_dict: dict[str, Any] = {}
 
         with open(path) as file:
-            model_dict = json.load(file)
+            self.model_dict = json.load(file)
 
-        self.materials_dict: dict[str, Any] = {}
-
-        if 'materials' in model_dict.keys():
-            self.materials_dict = model_dict['materials']
-
-        self.bones_dict: dict[str, Any] = {}
-
-        if 'bones' in model_dict.keys():
-            self.bones_dict = model_dict['bones']
-
-        self.animation = Animation(self.bones_dict)
-        self.animation.set_bone_matrices(23.4)
+        self.animation = Animation(self.model_dict['bones'])
+        self.animation.set_bone_matrices(10)
 
         self.bytes = self.get_bytes()
         self.vbo = self.ctx.buffer(self.bytes)
@@ -44,29 +34,28 @@ class Model:
     def get_bytes(self):
         bytes_data = b''
 
-        for material_dict in self.materials_dict.values():
-            for face in material_dict['faces']:
-                for name in ('a', 'b', 'c'):
-                    vertex = face[name]
+        for face in self.model_dict['faces']:
+            for name in ('a', 'b', 'c'):
+                vertex = face[name]
 
-                    bone_indices = [-1, -1, -1, -1]
-                    weights = [0.0, 0.0, 0.0, 0.0]
+                bone_indices = [-1, -1, -1, -1]
+                weights = [0.0, 0.0, 0.0, 0.0]
 
-                    if 'weights' in vertex.keys():
-                        for index, weight in enumerate(vertex['weights']):
-                            bone_indices[index] = list(self.bones_dict.keys()).index(weight['bone'])
-                            weights[index] = weight['weight']
+                if 'weights' in vertex.keys():
+                    for index, weight in enumerate(vertex['weights']):
+                        bone_indices[index] = list(self.model_dict['bones'].keys()).index(weight['bone'])
+                        weights[index] = weight['weight']
 
-                    bytes_data += struct.pack(
-                        '3f 3f 4i 4f',
-                        vertex['x'],
-                        vertex['y'],
-                        vertex['z'],
-                        face['normal']['x'],
-                        face['normal']['y'],
-                        face['normal']['z'],
-                        *bone_indices,
-                        *weights,
-                    )
+                bytes_data += struct.pack(
+                    '3f 3f 4i 4f',
+                    vertex['x'],
+                    vertex['y'],
+                    vertex['z'],
+                    face['normal']['x'],
+                    face['normal']['y'],
+                    face['normal']['z'],
+                    *bone_indices,
+                    *weights,
+                )
 
         return bytes_data

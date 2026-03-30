@@ -27,17 +27,11 @@ class Bone:
             if keyframe.frame <= frame:
                 rotate = glm.mat4_cast(keyframe.rotation)
 
-        if self.parent is not None:
-            rotate *= self.parent.get_matrix(frame)
+        # if self.parent is not None:
+        #     rotate *= self.parent.get_matrix(frame)
 
-        # print(glm.inverse(glm.translate(-self.head)))
-        # print(glm.translate(self.head))
-        # print()
-        # print(rotate)
-        # print(glm.translate(self.head) * rotate * glm.translate(-self.head))
-        # print()
-
-        return glm.translate(self.head) * rotate * glm.translate(-self.head)
+        return glm.translate(-self.head) * rotate * glm.translate(self.head)
+        # return rotate
 
 
 class Animation:
@@ -56,7 +50,7 @@ class Animation:
                         parent = bone
                         break
 
-            head = vec3(*bone_dict['head']) - vec3(0, 0, 2.3508)
+            head = vec3(*bone_dict['head'])
 
             keyframes: list[Keyframe] = []
 
