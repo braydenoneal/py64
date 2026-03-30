@@ -26,7 +26,7 @@ class Render:
             fragment_shader=open('../assets/shaders/main/fragment.glsl', 'r').read(),
         )
 
-        self.sphere = Model(self.ctx, self.program, '../assets/models/animation_test.json')
+        self.sphere = Model(self.ctx, self.program, '../assets/models/player.json')
 
     def get_camera_matrix(self):
         perspective = glm.perspective(math.radians(70.0), self.aspect_ratio, 0.1, 1000.0)
