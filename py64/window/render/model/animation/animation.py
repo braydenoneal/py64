@@ -27,10 +27,12 @@ class Bone:
             if keyframe.frame <= frame:
                 rotate = glm.mat4_cast(keyframe.rotation)
 
-        if self.parent is not None:
-            rotate *= self.parent.get_matrix(frame)
+        rotate = glm.translate(self.head) * rotate * glm.translate(-self.head)
 
-        return glm.translate(self.head) * rotate * glm.translate(-self.head)
+        if self.parent is not None:
+            rotate = self.parent.get_matrix(frame) * rotate
+
+        return rotate
 
 
 class Animation:
