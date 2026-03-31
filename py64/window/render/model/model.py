@@ -18,7 +18,7 @@ class Model:
             self.model_dict = json.load(file)
 
         self.animation = Animation(self.model_dict['bones'])
-        self.animation.set_bone_matrices(20)
+        self.animation.set_bone_matrices(10)
 
         self.bytes = self.get_bytes()
         self.vbo = self.ctx.buffer(self.bytes)

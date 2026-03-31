@@ -1,6 +1,6 @@
 #version 330 core
 
-const int MAX_BONES = 4;
+const int MAX_BONES = 2;
 
 uniform mat4 camera;
 uniform mat4 bones[MAX_BONES];

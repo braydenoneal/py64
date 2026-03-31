@@ -27,6 +27,7 @@ class Render:
         )
 
         self.sphere = Model(self.ctx, self.program, '../assets/models/player.json')
+        self.frame = 0.0
 
     def get_camera_matrix(self):
         perspective = glm.perspective(math.radians(70.0), self.aspect_ratio, 0.1, 1000.0)
@@ -37,6 +38,10 @@ class Render:
 
     def main_loop(self):
         self.ctx.clear()
+
+        self.frame += 0.25
+        self.frame %= 20.0
+        self.sphere.animation.set_bone_matrices(self.frame)
 
         self.program['light'].write(vec3(-0.1, 0.55, 0.35))
 

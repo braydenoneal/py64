@@ -7,20 +7,6 @@ from pyglm import glm
 from pyglm.glm import vec3, mat4x4, quat
 
 
-def quat_to_mat4x4(q: quat) -> mat4x4:
-    w = q.w
-    x = q.x
-    y = q.y
-    z = q.z
-
-    return mat4x4([
-        [1 - 2 * (y * y + z * z), 2 * (x * y - z * w), 2 * (x * z + y * w), 0],
-        [2 * (x * y + z * w), 1 - 2 * (x * x + z * z), 2 * (y * z - x * w), 0],
-        [2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y), 0],
-        [0, 0, 0, 1],
-    ])
-
-
 @dataclass
 class Keyframe:
     frame: float
@@ -35,12 +21,21 @@ class Bone:
         self.keyframes = keyframes
 
     def get_matrix(self, frame: float) -> mat4x4:
-        rotate = glm.mat4x4(1)
+        prev_keyframe = Keyframe(0, quat(1, 0, 0, 0))
+        next_keyframe = Keyframe(0, quat(1, 0, 0, 0))
 
         for keyframe in self.keyframes:
-            if keyframe.frame <= frame:
-                rotate = glm.translate(self.head) * glm.mat4_cast(keyframe.rotation) * glm.translate(-self.head)
-                # rotate = glm.translate(self.head) * quat_to_mat4x4(keyframe.rotation) * glm.translate(-self.head)
+            if frame >= keyframe.frame:
+                prev_keyframe = keyframe
+
+            elif frame <= keyframe.frame:
+                next_keyframe = keyframe
+
+        difference = next_keyframe.frame - prev_keyframe.frame
+        factor = ((frame - prev_keyframe.frame) / difference) if difference > 0 else 0
+        rotation = prev_keyframe.rotation * (1 - factor) + next_keyframe.rotation * factor
+
+        rotate = glm.translate(self.head) * glm.mat4_cast(rotation) * glm.translate(-self.head)
 
         if self.parent is not None:
             rotate = self.parent.get_matrix(frame) * rotate
