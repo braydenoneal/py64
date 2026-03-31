@@ -7,6 +7,20 @@ from pyglm import glm
 from pyglm.glm import vec3, mat4x4, quat
 
 
+def quat_to_mat4x4(q: quat) -> mat4x4:
+    w = q.w
+    x = q.x
+    y = q.y
+    z = q.z
+
+    return mat4x4([
+        [1 - 2 * (y * y + z * z), 2 * (x * y - z * w), 2 * (x * z + y * w), 0],
+        [2 * (x * y + z * w), 1 - 2 * (x * x + z * z), 2 * (y * z - x * w), 0],
+        [2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y), 0],
+        [0, 0, 0, 1],
+    ])
+
+
 @dataclass
 class Keyframe:
     frame: float
@@ -25,9 +39,8 @@ class Bone:
 
         for keyframe in self.keyframes:
             if keyframe.frame <= frame:
-                rotate = glm.mat4_cast(keyframe.rotation)
-
-        rotate = glm.translate(self.head) * rotate * glm.translate(-self.head)
+                rotate = glm.translate(self.head) * glm.mat4_cast(keyframe.rotation) * glm.translate(-self.head)
+                # rotate = glm.translate(self.head) * quat_to_mat4x4(keyframe.rotation) * glm.translate(-self.head)
 
         if self.parent is not None:
             rotate = self.parent.get_matrix(frame) * rotate

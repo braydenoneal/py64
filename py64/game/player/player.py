@@ -4,10 +4,10 @@ from pyglm.glm import vec3
 
 class Player:
     def __init__(self):
-        self.position = vec3(0, 0, 100)
+        self.position = vec3(0, 0, 10)
         self.x_angle: float = 0
         self.y_angle: float = 0
-        self.speed = 1.2
+        self.speed = 0.2
 
         self.movement = {
             'forward': False,
