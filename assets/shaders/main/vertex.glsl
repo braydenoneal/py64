@@ -1,6 +1,6 @@
 #version 330 core
 
-const int MAX_BONES = 2;
+const int MAX_BONES = 4;
 
 uniform mat4 camera;
 uniform mat4 bones[MAX_BONES];
@@ -14,6 +14,7 @@ out vec3 normal;
 
 void main() {
     vec4 position = vec4(0);
+    vec3 new_normal = vec3(0);
 
     for (int i = 0; i < 4; i++) {
         int index = in_bone_indices[i];
@@ -23,9 +24,10 @@ void main() {
         }
 
         position += (bones[index] * vec4(in_vertex, 1)) * in_weights[i];
+        new_normal += (mat3(bones[index]) * in_normal) * in_weights[i];
     }
 
     gl_Position = camera * vec4(position.xyz, 1);
 
-    normal = in_normal;
+    normal = new_normal;
 }
