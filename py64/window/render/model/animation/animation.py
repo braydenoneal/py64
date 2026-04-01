@@ -4,13 +4,13 @@ from dataclasses import dataclass
 from typing import Any
 
 from pyglm import glm
-from pyglm.glm import vec3, mat4x4, quat
+from pyglm.glm import vec3, mat4x4
 
 
 @dataclass
 class Keyframe:
     frame: float
-    rotation: quat
+    matrix: mat4x4
 
 
 class Bone:
@@ -21,8 +21,8 @@ class Bone:
         self.keyframes = keyframes
 
     def get_matrix(self, frame: float) -> mat4x4:
-        prev_keyframe = Keyframe(0, quat(1, 0, 0, 0))
-        next_keyframe = Keyframe(0, quat(1, 0, 0, 0))
+        prev_keyframe = Keyframe(0, mat4x4(1))
+        next_keyframe = Keyframe(0, mat4x4(1))
 
         for keyframe in self.keyframes:
             if frame >= keyframe.frame:
@@ -33,9 +33,23 @@ class Bone:
 
         difference = next_keyframe.frame - prev_keyframe.frame
         factor = ((frame - prev_keyframe.frame) / difference) if difference > 0 else 0
-        rotation = prev_keyframe.rotation * (1 - factor) + next_keyframe.rotation * factor
 
-        rotate = glm.translate(self.head) * glm.mat4_cast(rotation) * glm.translate(-self.head)
+        rot0 = glm.quat_cast(prev_keyframe.matrix)
+        rot1 = glm.quat_cast(next_keyframe.matrix)
+
+        final_rotation = glm.slerp(rot0, rot1, factor)
+
+        prev_translate = prev_keyframe.matrix[3]
+        next_translate = next_keyframe.matrix[3]
+
+        final_translate = prev_translate * (1 - factor) + next_translate * factor
+
+        final_matrix = glm.mat4_cast(final_rotation)
+        # print(final_matrix)
+        # final_matrix[3] = final_translate
+
+        rotate = final_matrix
+        rotate = glm.translate(self.head) * glm.transpose(rotate) * glm.translate(-self.head)
 
         if self.parent is not None:
             rotate = self.parent.get_matrix(frame) * rotate
@@ -64,7 +78,7 @@ class Animation:
             keyframes: list[Keyframe] = []
 
             for frame in bone_dict['frames']:
-                keyframes.append(Keyframe(frame['frame'], quat(*frame['rotation'])))
+                keyframes.append(Keyframe(frame['frame'], mat4x4(frame['matrix'])))
 
             self.bones.append(Bone(name, head, parent, keyframes))
 
@@ -76,6 +90,9 @@ class Animation:
 
         for bone in self.bones:
             bone_matrices.append(bone.get_matrix(frame))
+
+        for i in range(len(bone_matrices), 100):
+            bone_matrices.append(mat4x4(1))
 
         self.bone_matrices = bone_matrices
         self.bone_matrices_bytes: bytes = self.get_bone_matrices_bytes()

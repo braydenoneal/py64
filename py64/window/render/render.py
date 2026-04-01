@@ -26,7 +26,7 @@ class Render:
             fragment_shader=open('../assets/shaders/main/fragment.glsl', 'r').read(),
         )
 
-        self.sphere = Model(self.ctx, self.program, '../assets/models/player.json')
+        self.sphere = Model(self.ctx, self.program, '../assets/models/player2.json')
         self.frame = 0.0
 
     def get_camera_matrix(self):
@@ -40,7 +40,7 @@ class Render:
         self.ctx.clear()
 
         self.frame += 0.25
-        self.frame %= 20.0
+        self.frame %= 30.0
         self.sphere.animation.set_bone_matrices(self.frame)
 
         self.program['light'].write(vec3(-0.1, 0.55, 0.35))
