@@ -11,11 +11,6 @@ from pyglm.glm import vec3, mat4x4
 class Keyframe:
     frame: float
     matrix: mat4x4
-    matrix_basis: mat4x4
-    matrix_channel: mat4x4
-    matrix_channel_no_parent: mat4x4
-    bone_matrix: mat4x4
-    bone_matrix_local: mat4x4
 
 
 class Bone:
@@ -26,8 +21,8 @@ class Bone:
         self.keyframes = keyframes
 
     def get_matrix(self, frame: float) -> mat4x4:
-        prev_keyframe = Keyframe(0, mat4x4(1), mat4x4(1), mat4x4(1), mat4x4(1), mat4x4(1), mat4x4(1))
-        next_keyframe = Keyframe(0, mat4x4(1), mat4x4(1), mat4x4(1), mat4x4(1), mat4x4(1), mat4x4(1))
+        prev_keyframe = Keyframe(0, mat4x4(1))
+        next_keyframe = Keyframe(0, mat4x4(1))
 
         for keyframe in self.keyframes:
             if frame >= keyframe.frame:
@@ -36,33 +31,26 @@ class Bone:
             elif frame <= keyframe.frame:
                 next_keyframe = keyframe
 
-        prev_matrix = prev_keyframe.matrix_channel_no_parent
-        next_matrix = next_keyframe.matrix_channel_no_parent
-
         difference = next_keyframe.frame - prev_keyframe.frame
         factor = ((frame - prev_keyframe.frame) / difference) if difference > 0 else 0
 
-        rot0 = glm.quat_cast(prev_matrix)
-        rot1 = glm.quat_cast(next_matrix)
+        prev_rotate = glm.quat_cast(prev_keyframe.matrix)
+        next_rotate = glm.quat_cast(next_keyframe.matrix)
 
-        final_rotation = glm.slerp(rot0, rot1, factor)
+        rotate = glm.slerp(prev_rotate, next_rotate, factor)
 
-        prev_translate = prev_matrix[3]
-        next_translate = next_matrix[3]
+        prev_translate = prev_keyframe.matrix[3]
+        next_translate = next_keyframe.matrix[3]
 
-        final_translate = prev_translate * (1 - factor) + next_translate * factor
+        translate = prev_translate * (1 - factor) + next_translate * factor
 
-        final_matrix = glm.mat4_cast(final_rotation)
-        final_matrix[3] = final_translate
-
-        rotate = final_matrix
-        # rotate = prev_matrix
-        # rotate = glm.translate(self.head) * rotate * glm.translate(-self.head)
+        matrix = glm.mat4_cast(rotate)
+        matrix[3] = translate
 
         if self.parent is not None:
-            rotate = self.parent.get_matrix(frame) * rotate
+            matrix = self.parent.get_matrix(frame) * matrix
 
-        return rotate
+        return matrix
 
 
 class Animation:
@@ -89,11 +77,6 @@ class Animation:
                 keyframes.append(Keyframe(
                     frame['frame'],
                     mat4x4(frame['matrix']),
-                    mat4x4(frame['matrix_basis']),
-                    mat4x4(frame['matrix_channel']),
-                    mat4x4(frame['matrix_channel_no_parent']),
-                    mat4x4(frame['bone_matrix']),
-                    mat4x4(frame['bone_matrix_local']),
                 ))
 
             self.bones.append(Bone(name, head, parent, keyframes))
