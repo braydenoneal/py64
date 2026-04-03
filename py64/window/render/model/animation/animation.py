@@ -5,7 +5,7 @@ from typing import Any
 
 import moderngl
 from moderngl import Context
-from pyglm.glm import vec3, mat4x4
+from pyglm.glm import vec3, mat3x3, mat4x4
 
 from py64.window.render.model.animation.bone.bone import Bone, Keyframe
 
@@ -35,7 +35,7 @@ class Animation:
             for frame in bone_dict['frames']:
                 keyframes.append(Keyframe(
                     frame['frame'],
-                    mat4x4(frame['matrix']),
+                    mat3x3(frame['matrix']),
                 ))
 
             self.bones.append(Bone(name, head, tail, parent, keyframes))

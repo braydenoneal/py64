@@ -3,13 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from pyglm import glm
-from pyglm.glm import vec3, mat4x4
+from pyglm.glm import vec3, mat3x3, mat4x4
 
 
 @dataclass
 class Keyframe:
     frame: float
-    matrix: mat4x4
+    matrix: mat3x3
 
 
 @dataclass
@@ -21,8 +21,8 @@ class Bone:
     keyframes: list[Keyframe]
 
     def get_matrix(self, frame: float) -> mat4x4:
-        prev_keyframe = Keyframe(0, mat4x4(1))
-        next_keyframe = Keyframe(0, mat4x4(1))
+        prev_keyframe = Keyframe(0, mat3x3(1))
+        next_keyframe = Keyframe(0, mat3x3(1))
 
         for keyframe in self.keyframes:
             if frame >= keyframe.frame:
