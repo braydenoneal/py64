@@ -54,12 +54,12 @@ class Model:
         self.vao.render()
 
         if self.animation is not None:
-            self.animation.step()
-
             if self.render_skeleton:
                 self.ctx.disable(moderngl.DEPTH_TEST)
                 self.animation.render_skeleton(camera_matrix)
                 self.ctx.enable(moderngl.DEPTH_TEST)
+
+            self.animation.step()
 
     def get_bytes(self):
         bytes_data = b''
