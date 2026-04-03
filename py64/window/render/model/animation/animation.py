@@ -15,6 +15,8 @@ class Animation:
         self.ctx = ctx
         self.bones_dict = bones_dict
         self.bones: list[Bone] = []
+        self.frame: float = 0
+        self.last_frame: float = 0
 
         for name, bone_dict in self.bones_dict.items():
             parent: Bone | None = None
@@ -38,10 +40,14 @@ class Animation:
                     mat3x3(frame['matrix']),
                 ))
 
+                if frame['frame'] > self.last_frame:
+                    self.last_frame = frame['frame']
+
             self.bones.append(Bone(name, head, tail, parent, keyframes))
 
         self.bone_matrices: list[mat4x4] = []
         self.bone_matrices_bytes: bytes = b''
+        self.set_bone_matrices(0)
 
         self.program = self.ctx.program(
             vertex_shader=open('../assets/shaders/skeleton/vertex.glsl', 'r').read(),
@@ -53,6 +59,11 @@ class Animation:
         self.vao = self.ctx.vertex_array(self.program, [
             (self.vbo, '4f', 'in_vertex'),
         ])
+
+    def step(self):
+        self.frame += 1
+        self.frame %= self.last_frame
+        self.set_bone_matrices(self.frame)
 
     def set_bone_matrices(self, frame: float):
         bone_matrices: list[mat4x4] = []

@@ -3,7 +3,6 @@ import math
 import moderngl
 import pygame
 from pyglm import glm
-from pyglm.glm import vec3
 
 from py64.game.game import Game
 from py64.window.render.model.model import Model
@@ -18,16 +17,7 @@ class Render:
         self.screen_size = self.ctx.screen.size
         self.aspect_ratio = self.ctx.screen.width / self.ctx.screen.height
 
-        self.ctx.enable(moderngl.DEPTH_TEST)
-        self.ctx.enable(moderngl.CULL_FACE)
-
-        self.program = self.ctx.program(
-            vertex_shader=open('../assets/shaders/main/vertex.glsl', 'r').read(),
-            fragment_shader=open('../assets/shaders/main/fragment.glsl', 'r').read(),
-        )
-
-        self.sphere = Model(self.ctx, self.program, '../assets/models/player.json')
-        self.frame = 0.0
+        self.player_model = Model(self.ctx, '../assets/models/player.json')
 
     def get_camera_matrix(self):
         perspective = glm.perspective(math.radians(70.0), self.aspect_ratio, 0.1, 1000.0)
@@ -37,19 +27,8 @@ class Render:
         return perspective * rotation * translate
 
     def main_loop(self):
-        self.ctx.enable(moderngl.DEPTH_TEST)
         self.ctx.clear()
 
-        self.frame += 0.25
-        self.frame %= 40.0
-        self.sphere.animation.set_bone_matrices(self.frame if self.frame < 20 else 40 - self.frame)
-
-        self.program['light'].write(vec3(-0.1, 0.55, 0.35))
-
-        self.program['camera'].write(self.get_camera_matrix())
-        self.sphere.render()
-
-        self.ctx.disable(moderngl.DEPTH_TEST)
-        self.sphere.animation.render_skeleton(self.get_camera_matrix())
+        self.player_model.render(self.get_camera_matrix())
 
         pygame.display.flip()
