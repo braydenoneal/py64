@@ -38,15 +38,19 @@ class Render:
         return perspective * rotation * translate
 
     def main_loop(self):
+        self.ctx.enable(moderngl.DEPTH_TEST)
         self.ctx.clear()
 
         self.frame += 0.25
         self.frame %= 40.0
-        self.sphere.animation.set_bone_matrices(self.frame)
+        self.sphere.animation.set_bone_matrices(self.frame if self.frame < 20 else 40 - self.frame)
 
         self.program['light'].write(vec3(-0.1, 0.55, 0.35))
 
         self.program['camera'].write(self.get_camera_matrix())
         self.sphere.render()
+
+        self.ctx.disable(moderngl.DEPTH_TEST)
+        self.sphere.animation.render_skeleton(self.get_camera_matrix())
 
         pygame.display.flip()

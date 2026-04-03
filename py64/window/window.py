@@ -17,8 +17,8 @@ class Window:
 
         pygame.init()
         pygame.mouse.set_visible(False)
-        self.width = 400  # pygame.display.Info().current_w
-        self.height = 400  # pygame.display.Info().current_h
+        self.width = pygame.display.Info().current_w
+        self.height = pygame.display.Info().current_h
         self.surface = pygame.display.set_mode((self.width, self.height), flags=pygame.OPENGL | pygame.DOUBLEBUF, vsync=True)
 
         self.input = Input(self.game, self.width, self.height)

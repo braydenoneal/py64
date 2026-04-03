@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import struct
 from dataclasses import dataclass
 from typing import Any
 
+import moderngl
+from moderngl import Context
 from pyglm import glm
 from pyglm.glm import vec3, mat4x4
 
@@ -14,9 +17,10 @@ class Keyframe:
 
 
 class Bone:
-    def __init__(self, name: str, head: vec3, parent: Bone | None, keyframes: list[Keyframe]):
+    def __init__(self, name: str, head: vec3, tail: vec3, parent: Bone | None, keyframes: list[Keyframe]):
         self.name = name
         self.head = head
+        self.tail = tail
         self.parent = parent
         self.keyframes = keyframes
 
@@ -39,22 +43,17 @@ class Bone:
 
         rotate = glm.slerp(prev_rotate, next_rotate, factor)
 
-        prev_translate = prev_keyframe.matrix[3]
-        next_translate = next_keyframe.matrix[3]
-
-        translate = prev_translate * (1 - factor) + next_translate * factor
-
-        matrix = glm.mat4_cast(rotate)
-        matrix[3] = translate
+        matrix = glm.translate(self.head) @ glm.mat4_cast(rotate) @ glm.translate(-self.head)
 
         if self.parent is not None:
-            matrix = self.parent.get_matrix(frame) * matrix
+            matrix = self.parent.get_matrix(frame) @ matrix
 
         return matrix
 
 
 class Animation:
-    def __init__(self, bones_dict: dict[str, Any]):
+    def __init__(self, ctx: Context, bones_dict: dict[str, Any]):
+        self.ctx = ctx
         self.bones_dict = bones_dict
         self.bones: list[Bone] = []
 
@@ -70,6 +69,7 @@ class Animation:
                         break
 
             head = vec3(*bone_dict['head'])
+            tail = vec3(*bone_dict['tail'])
 
             keyframes: list[Keyframe] = []
 
@@ -79,10 +79,21 @@ class Animation:
                     mat4x4(frame['matrix']),
                 ))
 
-            self.bones.append(Bone(name, head, parent, keyframes))
+            self.bones.append(Bone(name, head, tail, parent, keyframes))
 
         self.bone_matrices: list[mat4x4] = []
         self.bone_matrices_bytes: bytes = b''
+
+        self.program = self.ctx.program(
+            vertex_shader=open('../assets/shaders/skeleton/vertex.glsl', 'r').read(),
+            fragment_shader=open('../assets/shaders/skeleton/fragment.glsl', 'r').read(),
+        )
+
+        self.vbo = self.ctx.buffer(self.get_skeleton_bytes())
+
+        self.vao = self.ctx.vertex_array(self.program, [
+            (self.vbo, '4f', 'in_vertex'),
+        ])
 
     def set_bone_matrices(self, frame: float):
         bone_matrices: list[mat4x4] = []
@@ -103,3 +114,23 @@ class Animation:
             data += matrix.to_bytes()
 
         return data
+
+    def get_skeleton_bytes(self) -> bytes:
+        data = b''
+
+        for bone in self.bones:
+            data += struct.pack('4f', *bone.head, float(self.bones.index(bone)))
+            data += struct.pack('4f', *bone.tail, float(self.bones.index(bone)))
+
+        return data
+
+    def render_skeleton(self, camera_matrix: mat4x4):
+        self.ctx.disable(moderngl.DEPTH_TEST)
+
+        self.program['camera'].write(camera_matrix)
+        self.program['bones'].write(self.bone_matrices_bytes)
+
+        self.vbo.write(self.get_skeleton_bytes())
+        self.vao.render(mode=moderngl.LINES)
+
+        self.ctx.enable(moderngl.DEPTH_TEST)
