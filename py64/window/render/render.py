@@ -26,8 +26,7 @@ class Render:
             fragment_shader=open('../assets/shaders/main/fragment.glsl', 'r').read(),
         )
 
-        # self.sphere = Model(self.ctx, self.program, '../assets/models/animation_test.json')
-        self.sphere = Model(self.ctx, self.program, '../assets/models/player2.json')
+        self.sphere = Model(self.ctx, self.program, '../assets/models/player.json')
         self.frame = 0.0
 
     def get_camera_matrix(self):
