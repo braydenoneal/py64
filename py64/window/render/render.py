@@ -19,6 +19,7 @@ class Render:
         self.aspect_ratio = self.ctx.screen.width / self.ctx.screen.height
 
         self.player_model = Model(self.ctx, '../assets/models/player.json')
+        # self.player_model.animation.action = 'Test'
 
     def get_camera_matrix(self):
         perspective = glm.perspective(math.radians(70.0), self.aspect_ratio, 0.1, 1000.0)

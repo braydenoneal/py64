@@ -19,13 +19,13 @@ class Bone:
     head: vec3
     tail: vec3
     parent: Bone | None
-    keyframes: list[Keyframe]
+    keyframes: dict[str, list[Keyframe]]
 
-    def get_matrix(self, frame: float) -> mat4x4:
+    def get_matrix(self, frame: float, action: str) -> mat4x4:
         prev_keyframe = Keyframe(0, mat3x3(1), vec3(0))
         next_keyframe = Keyframe(0, mat3x3(1), vec3(0))
 
-        for keyframe in self.keyframes:
+        for keyframe in self.keyframes[action]:
             if frame >= keyframe.frame:
                 prev_keyframe = keyframe
 
@@ -49,6 +49,6 @@ class Bone:
         matrix = glm.translate(self.head) @ glm.mat4_cast(rotate) @ glm.translate(translate) @ glm.translate(-self.head)
 
         if self.parent is not None:
-            matrix = self.parent.get_matrix(frame) @ matrix
+            matrix = self.parent.get_matrix(frame, action) @ matrix
 
         return matrix
