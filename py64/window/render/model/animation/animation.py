@@ -38,6 +38,7 @@ class Animation:
                 keyframes.append(Keyframe(
                     frame['frame'],
                     mat3x3(frame['matrix']),
+                    vec3(frame['translation']['x'], frame['translation']['y'], frame['translation']['z']),
                 ))
 
                 if frame['frame'] > self.last_frame:

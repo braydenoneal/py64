@@ -12,6 +12,7 @@ class Render:
     def __init__(self, game: Game):
         self.game = game
         self.player = game.player
+        self.clock = pygame.Clock()
 
         self.ctx = moderngl.get_context()
         self.screen_size = self.ctx.screen.size
@@ -31,4 +32,5 @@ class Render:
 
         self.player_model.render(self.get_camera_matrix())
 
+        self.clock.tick(60)
         pygame.display.flip()
