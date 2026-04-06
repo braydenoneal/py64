@@ -78,12 +78,8 @@ class Model:
 
                 bytes_data += struct.pack(
                     '3f 3f 4i 4f',
-                    vertex['x'],
-                    vertex['y'],
-                    vertex['z'],
-                    face['normal']['x'],
-                    face['normal']['y'],
-                    face['normal']['z'],
+                    *vertex['vertex'],
+                    *face['normal'],
                     *bone_indices,
                     *weights,
                 )

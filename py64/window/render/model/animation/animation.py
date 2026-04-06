@@ -44,7 +44,7 @@ class Animation:
                     keyframes[action].append(Keyframe(
                         frame['frame'],
                         mat3x3(frame['matrix']),
-                        vec3(frame['translation']['x'], frame['translation']['y'], frame['translation']['z']),
+                        vec3(*frame['translation']),
                     ))
 
                     if frame['frame'] > self.action_lengths[action]:
