@@ -7,7 +7,7 @@ class Player:
         self.position = vec3(0, 10, 0)
         self.x_angle: float = 0
         self.y_angle: float = 0
-        self.scale = vec3(0.75, 1.5, 0.75)
+        self.scale = vec3(0.9, 1.5, 0.9)
         self.speed = 0.2
         self.grounded = False
         self.jump_vector = vec3(0)

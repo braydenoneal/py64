@@ -64,10 +64,9 @@ class Render:
         )
 
         self.forest = Model(self.ctx, self.program, '../assets/models/forest.json', vec3(42))
-        self.player_model = Model(self.ctx, self.program, '../assets/models/player.json', vec3(.2))
+        self.player_model = Model(self.ctx, self.program, '../assets/models/player.json', vec3(0.19))
+        self.ellipsoid = Model(self.ctx, self.program, '../assets/models/ellipsoid.json', self.player.scale)
         # self.player_model.animation.action = 'Test'
-
-        self.models = [self.player_model, self.forest]
 
         self.text = Text(self.ctx, 0, 0)
 
@@ -92,11 +91,12 @@ class Render:
             if index == 0:
                 self.program['screen_size'] = self.screen_size
 
+                self.forest.render(self.get_camera_matrix())
                 self.player_model.render(self.get_camera_matrix(
                     self.player.position + vec3(0, -1.5, 0),
                     glm.rotate(self.player.y_angle + math.radians(180), vec3(0, self.aspect_ratio, 0)),
                 ))
-                self.forest.render(self.get_camera_matrix())
+                self.ellipsoid.render(self.get_camera_matrix(self.player.position))
             else:
                 self.program['opaque_depth_texture'] = 2
                 self.fbo_list[0].color_attachments[1].use(2)
@@ -104,14 +104,14 @@ class Render:
                 self.program['previous_layer_depth_texture'] = 3
                 self.fbo_list[index - 1].color_attachments[1].use(3)
 
+                self.forest.render_transparent(self.get_camera_matrix())
                 self.player_model.render_transparent(self.get_camera_matrix(
-                    self.player.position,
+                    self.player.position + vec3(0, -1.5, 0),
                     glm.rotate(self.player.y_angle + math.radians(180), vec3(0, self.aspect_ratio, 0)),
                 ))
-                self.forest.render_transparent(self.get_camera_matrix())
+                self.ellipsoid.render_transparent(self.get_camera_matrix(self.player.position))
 
-        for model in self.models:
-            model.step_animation(self.get_camera_matrix())
+        self.player_model.step_animation(self.get_camera_matrix())
 
         self.ctx.disable(moderngl.DEPTH_TEST)
         self.ctx.disable(moderngl.CULL_FACE)

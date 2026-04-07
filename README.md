@@ -21,7 +21,7 @@ Also developing [n64-blender](https://github.com/braydenoneal/n64-blender) to ma
     - [x] Allow changing text
 - [x] Order-independent transparency
 - [x] Animations
-- [ ] Collision debug rendering (wireframe ellipsoid model?)
+- [x] Collision debug rendering (transparent ellipsoid model)
 - [ ] Fog
 - [ ] Horizontal blur
 - [ ] Anti-aliasing
