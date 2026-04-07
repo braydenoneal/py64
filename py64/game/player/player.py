@@ -12,6 +12,7 @@ class Player:
         self.speed = 0.2
         self.grounded = False
         self.jump_vector = vec3(0)
+        self.running = False
 
         self.movement = {
             'forward': False,
@@ -28,11 +29,13 @@ class Player:
         return x_rotate * y_rotate
 
     def get_move(self, move_vector: vec3) -> vec3:
+        self.running = True
         self.looking_y_angle = self.y_angle
         return glm.rotate(self.y_angle, vec3(0, 1, 0)) * move_vector
 
     def get_direction(self):
         direction = vec3(0, 0, 0)
+        self.running = False
 
         if self.movement['forward']:
             direction += self.get_move(vec3(0, 0, -1))

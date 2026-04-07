@@ -66,7 +66,6 @@ class Render:
         self.forest = Model(self.ctx, self.program, '../assets/models/forest.json', vec3(42))
         self.player_model = Model(self.ctx, self.program, '../assets/models/player.json', vec3(0.19))
         self.ellipsoid = Model(self.ctx, self.program, '../assets/models/ellipsoid.json', self.player.scale)
-        # self.player_model.animation.action = 'Test'
 
         self.models = [
             self.forest,
@@ -87,6 +86,8 @@ class Render:
         self.ctx.enable(moderngl.DEPTH_TEST)
         self.ctx.enable(moderngl.CULL_FACE)
         self.ctx.disable(moderngl.BLEND)
+
+        self.player_model.animation.action = 'Run' if self.player.running else 'Idle'
 
         self.player_model.position = self.player.position + vec3(0, -1.5, 0)
         self.player_model.rotation = glm.rotate(self.player.looking_y_angle + math.radians(180), vec3(0, 1, 0))
