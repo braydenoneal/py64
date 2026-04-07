@@ -7,6 +7,7 @@ class Player:
         self.position = vec3(0, 10, 0)
         self.x_angle: float = 0
         self.y_angle: float = 0
+        self.looking_y_angle: float = 0
         self.scale = vec3(0.9, 1.5, 0.9)
         self.speed = 0.2
         self.grounded = False
@@ -27,6 +28,7 @@ class Player:
         return x_rotate * y_rotate
 
     def get_move(self, move_vector: vec3) -> vec3:
+        self.looking_y_angle = self.y_angle
         return glm.rotate(self.y_angle, vec3(0, 1, 0)) * move_vector
 
     def get_direction(self):

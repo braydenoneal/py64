@@ -10,7 +10,7 @@ class Camera:
         self.free_cam = False
         self.speed = 0.2
         self.position = vec3(0)
-        self.distance_from_player = vec3(0, 0, 12)
+        self.distance_from_player = vec3(0, 0, 8)
 
         self.movement = {
             'forward': False,

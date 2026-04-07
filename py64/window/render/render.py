@@ -94,7 +94,7 @@ class Render:
                 self.forest.render(self.get_camera_matrix())
                 self.player_model.render(self.get_camera_matrix(
                     self.player.position + vec3(0, -1.5, 0),
-                    glm.rotate(self.player.y_angle + math.radians(180), vec3(0, self.aspect_ratio, 0)),
+                    glm.rotate(self.player.looking_y_angle + math.radians(180), vec3(0, self.aspect_ratio, 0)),
                 ))
                 # self.ellipsoid.render(self.get_camera_matrix(self.player.position))
             else:
@@ -107,13 +107,13 @@ class Render:
                 self.forest.render_transparent(self.get_camera_matrix())
                 self.player_model.render_transparent(self.get_camera_matrix(
                     self.player.position + vec3(0, -1.5, 0),
-                    glm.rotate(self.player.y_angle + math.radians(180), vec3(0, self.aspect_ratio, 0)),
+                    glm.rotate(self.player.looking_y_angle + math.radians(180), vec3(0, self.aspect_ratio, 0)),
                 ))
                 # self.ellipsoid.render_transparent(self.get_camera_matrix(self.player.position))
 
         self.player_model.step_animation(self.get_camera_matrix(
             self.player.position + vec3(0, -1.5, 0),
-            glm.rotate(self.player.y_angle + math.radians(180), vec3(0, self.aspect_ratio, 0)),
+            glm.rotate(self.player.looking_y_angle + math.radians(180), vec3(0, self.aspect_ratio, 0)),
         ))
 
         self.ctx.disable(moderngl.DEPTH_TEST)
