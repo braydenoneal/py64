@@ -9,6 +9,7 @@ class Input:
     def __init__(self, game: Game, width: int, height: int):
         self.game = game
         self.player = game.player
+        self.camera = game.camera
         self.width = width
         self.height = height
         pygame.mouse.set_pos((self.width // 2, self.height // 2))
@@ -29,6 +30,9 @@ class Input:
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_q:
                     return False
+                if event.key == pygame.K_f:
+                    self.camera.free_cam = not self.camera.free_cam
+                    self.camera.snap_to_player()
 
         keys = pygame.key.get_pressed()
 
@@ -36,8 +40,16 @@ class Input:
         self.player.movement['backward'] = keys[pygame.K_s]
         self.player.movement['left'] = keys[pygame.K_a]
         self.player.movement['right'] = keys[pygame.K_d]
-        self.player.movement['up'] = keys[pygame.K_SPACE]
-        self.player.movement['down'] = keys[pygame.K_LSHIFT]
+
+        if keys[pygame.K_SPACE]:
+            self.player.jump()
+
+        self.camera.movement['forward'] = keys[pygame.K_w]
+        self.camera.movement['backward'] = keys[pygame.K_s]
+        self.camera.movement['left'] = keys[pygame.K_a]
+        self.camera.movement['right'] = keys[pygame.K_d]
+        self.camera.movement['up'] = keys[pygame.K_SPACE]
+        self.camera.movement['down'] = keys[pygame.K_LSHIFT]
 
         pygame.event.set_grab(True)
 

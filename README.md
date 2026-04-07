@@ -20,10 +20,10 @@ Also developing [n64-blender](https://github.com/braydenoneal/n64-blender) to ma
     - [x] Multi-line text
     - [x] Allow changing text
 - [x] Order-independent transparency
+- [x] Animations
 - [ ] Fog
 - [ ] Horizontal blur
 - [ ] Anti-aliasing
-- [ ] Animations
 - [ ] Skybox
 - [ ] Texture scroll
 - [ ] Texture animations

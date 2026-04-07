@@ -1,43 +1,43 @@
 import json
-import struct
 from typing import Any
 
 import moderngl
-from moderngl import Context
+from moderngl import Context, Program
 from pyglm.glm import vec3, mat4x4
 
 from py64.window.render.model.animation.animation import Animation
+from py64.window.render.model.material.material import Material
 
 
 class Model:
-    def __init__(self, ctx: Context, path: str, render_skeleton: bool = False):
+    def __init__(self, ctx: Context, program: Program, path: str, scale: vec3 = vec3(1), render_skeleton: bool = False):
         self.ctx = ctx
+        self.program = program
         self.render_skeleton = render_skeleton
-
-        self.program = self.ctx.program(
-            vertex_shader=open('../assets/shaders/main/vertex.glsl', 'r').read(),
-            fragment_shader=open('../assets/shaders/main/fragment.glsl', 'r').read(),
-        )
 
         self.model_dict: dict[str, Any] = {}
 
         with open(path) as file:
             self.model_dict = json.load(file)
 
+        self.materials: list[Material] = []
+        self.transparent_materials: list[Material] = []
+
+        for material_dict in self.model_dict['materials'].values():
+            material = Material(ctx, self.program, material_dict, self.model_dict['bones'], scale)
+
+            if 'transparency' in material_dict:
+                self.transparent_materials.append(material)
+            else:
+                self.materials.append(material)
+
         self.animation: Animation | None = None
         self.empty_bones = b''.join(mat4x4(1).to_bytes() for _ in range(100))
 
         if self.model_dict['bones'] != {}:
-            self.animation = Animation(self.ctx, self.model_dict['bones'])
+            self.animation = Animation(self.ctx, self.model_dict['bones'], scale)
 
-        self.bytes = self.get_bytes()
-        self.vbo = self.ctx.buffer(self.bytes)
-
-        self.vao = self.ctx.vertex_array(self.program, [
-            (self.vbo, '3f 3f 4i 4f', 'in_vertex', 'in_normal', 'in_bone_indices', 'in_weights'),
-        ])
-
-    def render(self, camera_matrix: mat4x4):
+    def set_uniforms(self, camera_matrix: mat4x4):
         self.ctx.enable(moderngl.DEPTH_TEST)
         self.ctx.enable(moderngl.CULL_FACE)
 
@@ -51,8 +51,7 @@ class Model:
             self.program['animate'] = False
             self.program['bones'].write(self.empty_bones)
 
-        self.vao.render()
-
+    def step_animation(self, camera_matrix: mat4x4):
         if self.animation is not None:
             if self.render_skeleton:
                 self.ctx.disable(moderngl.DEPTH_TEST)
@@ -61,27 +60,14 @@ class Model:
 
             self.animation.step()
 
-    def get_bytes(self):
-        bytes_data = b''
+    def render(self, camera_matrix: mat4x4):
+        self.set_uniforms(camera_matrix)
 
-        for face in self.model_dict['faces']:
-            for name in ('a', 'b', 'c'):
-                vertex = face[name]
+        for material in self.materials:
+            material.render()
 
-                bone_indices = [-1, -1, -1, -1]
-                weights = [0.0, 0.0, 0.0, 0.0]
+    def render_transparent(self, camera_matrix: mat4x4):
+        self.set_uniforms(camera_matrix)
 
-                if 'weights' in vertex.keys():
-                    for index, weight in enumerate(vertex['weights']):
-                        bone_indices[index] = list(self.model_dict['bones'].keys()).index(weight['bone'])
-                        weights[index] = weight['weight']
-
-                bytes_data += struct.pack(
-                    '3f 3f 4i 4f',
-                    *vertex['vertex'],
-                    *face['normal'],
-                    *bone_indices,
-                    *weights,
-                )
-
-        return bytes_data
+        for material in self.transparent_materials:
+            material.render()

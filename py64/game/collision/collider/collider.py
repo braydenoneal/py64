@@ -20,26 +20,10 @@ class Collider:
         for material in self.model_dict['materials'].values():
             for face in material['faces']:
                 self.collision_faces.append(Face(
-                    vec3(
-                        face['a']['x'] * scale.x,
-                        face['a']['y'] * scale.y,
-                        face['a']['z'] * scale.z,
-                    ),
-                    vec3(
-                        face['b']['x'] * scale.x,
-                        face['b']['y'] * scale.y,
-                        face['b']['z'] * scale.z,
-                    ),
-                    vec3(
-                        face['c']['x'] * scale.x,
-                        face['c']['y'] * scale.y,
-                        face['c']['z'] * scale.z,
-                    ),
-                    vec3(
-                        face['normal']['x'],
-                        face['normal']['y'],
-                        face['normal']['z'],
-                    ),
+                    vec3(*face['a']['vertex']) * scale,
+                    vec3(*face['b']['vertex']) * scale,
+                    vec3(*face['c']['vertex']) * scale,
+                    vec3(*face['normal']),
                     material['backface_culling'],
                 ))
 

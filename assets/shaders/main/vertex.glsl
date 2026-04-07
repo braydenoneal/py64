@@ -8,10 +8,14 @@ uniform mat4 bones[MAX_BONES];
 
 in vec3 in_vertex;
 in vec3 in_normal;
+in vec2 in_uv;
+in vec4 in_color;
 in ivec4 in_bone_indices;
 in vec4 in_weights;
 
 out vec3 normal;
+out vec2 uv;
+out vec4 color;
 
 void main() {
     if (animate) {
@@ -35,4 +39,7 @@ void main() {
         gl_Position = camera * vec4(in_vertex, 1);
         normal = in_normal;
     }
+
+    uv = in_uv;
+    color = in_color;
 }

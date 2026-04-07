@@ -11,9 +11,10 @@ from py64.window.render.model.animation.bone.bone import Bone, Keyframe
 
 
 class Animation:
-    def __init__(self, ctx: Context, bones_dict: dict[str, Any]):
+    def __init__(self, ctx: Context, bones_dict: dict[str, Any], scale: vec3):
         self.ctx = ctx
         self.bones_dict = bones_dict
+        self.scale = scale
         self.bones: list[Bone] = []
         self.frame: float = 0
 
@@ -28,8 +29,8 @@ class Animation:
                         parent = bone
                         break
 
-            head = vec3(*bone_dict['head'])
-            tail = vec3(*bone_dict['tail'])
+            head = vec3(*bone_dict['head']) * scale
+            tail = vec3(*bone_dict['tail']) * scale
 
             keyframes: dict[str, list[Keyframe]] = {}
             self.action_lengths: dict[str, float] = {}
@@ -44,7 +45,7 @@ class Animation:
                     keyframes[action].append(Keyframe(
                         frame['frame'],
                         mat3x3(frame['matrix']),
-                        vec3(*frame['translation']),
+                        vec3(*frame['translation']) * scale,
                     ))
 
                     if frame['frame'] > self.action_lengths[action]:
