@@ -3,6 +3,7 @@
 const int MAX_BONES = 100;
 
 uniform mat4 camera;
+uniform mat4 transform;
 uniform bool animate;
 uniform mat4 bones[MAX_BONES];
 
@@ -19,7 +20,7 @@ out vec4 color;
 
 void main() {
     if (animate) {
-        vec4 position = vec4(0);
+        vec4 new_position = vec4(0);
         vec3 new_normal = vec3(0);
 
         for (int i = 0; i < 4; i++) {
@@ -29,14 +30,14 @@ void main() {
                 continue;
             }
 
-            position += (bones[index] * vec4(in_vertex, 1)) * in_weights[i];
+            new_position += (bones[index] * vec4(in_vertex, 1)) * in_weights[i];
             new_normal += (mat3(bones[index]) * in_normal) * in_weights[i];
         }
 
-        gl_Position = camera * vec4(position.xyz, 1);
+        gl_Position = camera * transform * vec4(new_position.xyz, 1);
         normal = new_normal;
     } else {
-        gl_Position = camera * vec4(in_vertex, 1);
+        gl_Position = camera * transform * vec4(in_vertex, 1);
         normal = in_normal;
     }
 

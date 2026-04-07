@@ -5,7 +5,7 @@ import numpy as np
 import pygame
 from moderngl import Framebuffer
 from pyglm import glm
-from pyglm.glm import vec3, mat4x4
+from pyglm.glm import vec3
 
 from py64.game.game import Game
 from py64.window.render.model.model import Model
@@ -68,19 +68,30 @@ class Render:
         self.ellipsoid = Model(self.ctx, self.program, '../assets/models/ellipsoid.json', self.player.scale)
         # self.player_model.animation.action = 'Test'
 
+        self.models = [
+            self.forest,
+            self.player_model,
+            # self.ellipsoid,
+        ]
+
         self.text = Text(self.ctx, 0, 0)
 
-    def get_camera_matrix(self, model_position: vec3 = vec3(0), model_rotation: mat4x4 = mat4x4(1)):
+    def get_camera_matrix(self):
         perspective = glm.perspective(math.radians(70.0), self.aspect_ratio, 0.1, 1000.0)
         rotation = self.camera.get_rotation_matrix()
-        translate = glm.translate(model_position - self.camera.position)
+        translate = glm.translate(-self.camera.position)
 
-        return perspective * rotation * translate * model_rotation
+        return perspective * rotation * translate
 
     def main_loop(self):
         self.ctx.enable(moderngl.DEPTH_TEST)
         self.ctx.enable(moderngl.CULL_FACE)
         self.ctx.disable(moderngl.BLEND)
+
+        self.player_model.position = self.player.position + vec3(0, -1.5, 0)
+        self.player_model.rotation = glm.rotate(self.player.looking_y_angle + math.radians(180), vec3(0, 1, 0))
+
+        self.ellipsoid.position = vec3(self.player.position)
 
         for index, fbo in enumerate(self.fbo_list):
             fbo.use()
@@ -91,12 +102,8 @@ class Render:
             if index == 0:
                 self.program['screen_size'] = self.screen_size
 
-                self.forest.render(self.get_camera_matrix())
-                self.player_model.render(self.get_camera_matrix(
-                    self.player.position + vec3(0, -1.5, 0),
-                    glm.rotate(self.player.looking_y_angle + math.radians(180), vec3(0, self.aspect_ratio, 0)),
-                ))
-                # self.ellipsoid.render(self.get_camera_matrix(self.player.position))
+                for model in self.models:
+                    model.render(self.get_camera_matrix())
             else:
                 self.program['opaque_depth_texture'] = 2
                 self.fbo_list[0].color_attachments[1].use(2)
@@ -104,14 +111,11 @@ class Render:
                 self.program['previous_layer_depth_texture'] = 3
                 self.fbo_list[index - 1].color_attachments[1].use(3)
 
-                self.forest.render_transparent(self.get_camera_matrix())
-                self.player_model.render_transparent(self.get_camera_matrix(
-                    self.player.position + vec3(0, -1.5, 0),
-                    glm.rotate(self.player.looking_y_angle + math.radians(180), vec3(0, self.aspect_ratio, 0)),
-                ))
-                # self.ellipsoid.render_transparent(self.get_camera_matrix(self.player.position))
+                for model in self.models:
+                    model.render_transparent(self.get_camera_matrix())
 
-        self.player_model.step_animation()
+        for model in self.models:
+            model.step_animation()
 
         self.ctx.disable(moderngl.DEPTH_TEST)
         self.ctx.disable(moderngl.CULL_FACE)

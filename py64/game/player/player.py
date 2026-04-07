@@ -8,7 +8,7 @@ class Player:
         self.x_angle: float = 0
         self.y_angle: float = 0
         self.looking_y_angle: float = 0
-        self.scale = vec3(0.9, 1.5, 0.9)
+        self.scale = vec3(0.5, 1.5, 0.5)
         self.speed = 0.2
         self.grounded = False
         self.jump_vector = vec3(0)

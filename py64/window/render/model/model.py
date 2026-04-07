@@ -3,6 +3,7 @@ from typing import Any
 
 import moderngl
 from moderngl import Context, Program
+from pyglm import glm
 from pyglm.glm import vec3, mat4x4
 
 from py64.window.render.model.animation.animation import Animation
@@ -14,6 +15,8 @@ class Model:
         self.ctx = ctx
         self.program = program
         self.render_armature = render_armature
+        self.position = vec3(0)
+        self.rotation = mat4x4(1)
 
         self.model_dict: dict[str, Any] = {}
 
@@ -43,6 +46,7 @@ class Model:
 
         self.program['light'].write(vec3(-0.1, 0.55, 0.35))
         self.program['camera'].write(camera_matrix)
+        self.program['transform'].write(glm.translate(self.position) * self.rotation)
 
         if self.animation is not None:
             self.program['animate'] = True
