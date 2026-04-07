@@ -21,6 +21,7 @@ Also developing [n64-blender](https://github.com/braydenoneal/n64-blender) to ma
     - [x] Allow changing text
 - [x] Order-independent transparency
 - [x] Animations
+- [ ] Collision debug rendering (wireframe ellipsoid model?)
 - [ ] Fog
 - [ ] Horizontal blur
 - [ ] Anti-aliasing
@@ -40,9 +41,9 @@ Also developing [n64-blender](https://github.com/braydenoneal/n64-blender) to ma
 ## Model Exporter Todo
 
 - [x] Merge vertex color and alpha attributes
+- [x] Animations
 - [;] Second textures [separate uv maps]
 - [ ] Create an extensive test scene
-- [ ] Animations
 - [ ] Texture scroll
 - [ ] Texture animations
 - [ ] Gouraud shading
