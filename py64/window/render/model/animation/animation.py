@@ -58,11 +58,11 @@ class Animation:
         self.set_bone_matrices(0, self.action)
 
         self.program = self.ctx.program(
-            vertex_shader=open('../assets/shaders/skeleton/vertex.glsl', 'r').read(),
-            fragment_shader=open('../assets/shaders/skeleton/fragment.glsl', 'r').read(),
+            vertex_shader=open('../assets/shaders/armature/vertex.glsl', 'r').read(),
+            fragment_shader=open('../assets/shaders/armature/fragment.glsl', 'r').read(),
         )
 
-        self.vbo = self.ctx.buffer(self.get_skeleton_bytes())
+        self.vbo = self.ctx.buffer(self.get_armature_bytes())
 
         self.vao = self.ctx.vertex_array(self.program, [
             (self.vbo, '4f', 'in_vertex'),
@@ -93,7 +93,7 @@ class Animation:
 
         return data
 
-    def get_skeleton_bytes(self) -> bytes:
+    def get_armature_bytes(self) -> bytes:
         data = b''
 
         for bone in self.bones:
@@ -102,13 +102,13 @@ class Animation:
 
         return data
 
-    def render_skeleton(self, camera_matrix: mat4x4):
+    def render_armature(self, camera_matrix: mat4x4):
         self.ctx.disable(moderngl.DEPTH_TEST)
 
         self.program['camera'].write(camera_matrix)
         self.program['bones'].write(self.bone_matrices_bytes)
 
-        self.vbo.write(self.get_skeleton_bytes())
+        self.vbo.write(self.get_armature_bytes())
         self.vao.render(mode=moderngl.LINES)
 
         self.ctx.enable(moderngl.DEPTH_TEST)

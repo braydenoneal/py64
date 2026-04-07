@@ -10,10 +10,10 @@ from py64.window.render.model.material.material import Material
 
 
 class Model:
-    def __init__(self, ctx: Context, program: Program, path: str, scale: vec3 = vec3(1), render_skeleton: bool = False):
+    def __init__(self, ctx: Context, program: Program, path: str, scale: vec3 = vec3(1), render_armature: bool = False):
         self.ctx = ctx
         self.program = program
-        self.render_skeleton = render_skeleton
+        self.render_armature = render_armature
 
         self.model_dict: dict[str, Any] = {}
 
@@ -51,13 +51,8 @@ class Model:
             self.program['animate'] = False
             self.program['bones'].write(self.empty_bones)
 
-    def step_animation(self, camera_matrix: mat4x4):
+    def step_animation(self):
         if self.animation is not None:
-            if self.render_skeleton:
-                self.ctx.disable(moderngl.DEPTH_TEST)
-                self.animation.render_skeleton(camera_matrix)
-                self.ctx.enable(moderngl.DEPTH_TEST)
-
             self.animation.step()
 
     def render(self, camera_matrix: mat4x4):
@@ -65,6 +60,11 @@ class Model:
 
         for material in self.materials:
             material.render()
+
+        if self.animation is not None and self.render_armature:
+            self.ctx.disable(moderngl.DEPTH_TEST)
+            self.animation.render_armature(camera_matrix)
+            self.ctx.enable(moderngl.DEPTH_TEST)
 
     def render_transparent(self, camera_matrix: mat4x4):
         self.set_uniforms(camera_matrix)

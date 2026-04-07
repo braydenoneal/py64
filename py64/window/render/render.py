@@ -111,10 +111,7 @@ class Render:
                 ))
                 # self.ellipsoid.render_transparent(self.get_camera_matrix(self.player.position))
 
-        self.player_model.step_animation(self.get_camera_matrix(
-            self.player.position + vec3(0, -1.5, 0),
-            glm.rotate(self.player.looking_y_angle + math.radians(180), vec3(0, self.aspect_ratio, 0)),
-        ))
+        self.player_model.step_animation()
 
         self.ctx.disable(moderngl.DEPTH_TEST)
         self.ctx.disable(moderngl.CULL_FACE)
