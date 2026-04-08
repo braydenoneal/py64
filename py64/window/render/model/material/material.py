@@ -66,7 +66,7 @@ class Material:
                 bytes_data += struct.pack(
                     '3f 3f 2f 4f 4i 4f',
                     *(vec3(*vertex['vertex']) * self.scale),
-                    *face['normal'],
+                    *(vertex['normal'] if 'normal' in vertex.keys() else face['normal']),
                     vertex['u'] if 'texture' in self.material_dict.keys() else 0.0,
                     vertex['v'] if 'texture' in self.material_dict.keys() else 0.0,
                     vertex['color'][0] if self.material_dict['vertex_colors'] else 1.0,

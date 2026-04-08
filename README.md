@@ -22,13 +22,15 @@ Also developing [n64-blender](https://github.com/braydenoneal/n64-blender) to ma
 - [x] Order-independent transparency
 - [x] Animations
 - [x] Collision debug rendering (transparent ellipsoid model)
+- [;] Gouraud shading
+    - [x] Vertex normals
+    - [ ] Specular highlights
 - [ ] Fog
 - [ ] Horizontal blur
 - [ ] Anti-aliasing
 - [ ] Skybox
 - [ ] Texture scroll
 - [ ] Texture animations
-- [ ] Gouraud shading
 - [ ] Revisit decoupling frame-rate from physics rate
 - [ ] UI framework (maybe something like HTML with tailwind-like class name styling?)
 - [ ] Level loading and unloading
