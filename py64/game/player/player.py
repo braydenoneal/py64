@@ -52,6 +52,11 @@ class Player:
         if glm.length(direction) != 0.0:
             direction = glm.normalize(direction) * self.speed
 
+            a = glm.normalize(vec3(direction.x, 0, direction.z))
+            b = vec3(0, 0, 1)
+
+            self.looking_y_angle = glm.atan2(a.x * b.z - a.z * b.x, a.x * b.x + a.z * b.z)
+
         if self.movement['up']:
             direction += self.jump_vector
 

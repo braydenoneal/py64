@@ -90,7 +90,7 @@ class Render:
         self.player_model.animation.action = 'Run' if self.player.running else 'Idle'
 
         self.player_model.position = self.player.position + vec3(0, -1.5, 0)
-        self.player_model.rotation = glm.rotate(self.player.looking_y_angle + math.radians(180), vec3(0, 1, 0))
+        self.player_model.rotation = glm.rotate(self.player.looking_y_angle, vec3(0, 1, 0))
 
         self.ellipsoid.position = vec3(self.player.position)
 
