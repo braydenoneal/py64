@@ -41,7 +41,7 @@ class Input:
         self.player.movement['left'] = keys[pygame.K_a]
         self.player.movement['right'] = keys[pygame.K_d]
 
-        if keys[pygame.K_SPACE]:
+        if keys[pygame.K_SPACE] and not self.camera.free_cam:
             self.player.jump()
 
         self.camera.movement['forward'] = keys[pygame.K_w]
