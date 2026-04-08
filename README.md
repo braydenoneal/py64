@@ -33,6 +33,11 @@ Also developing [n64-blender](https://github.com/braydenoneal/n64-blender) to ma
 - [ ] UI framework (maybe something like HTML with tailwind-like class name styling?)
 - [ ] Level loading and unloading
 - [ ] Sound
+- [ ] Normal maps, diffuse maps, etc.
+- [ ] Bloom
+- [ ] Shadows
+- [ ] God rays
+- [ ] Dynamic lighting
 
 ## Issues
 
