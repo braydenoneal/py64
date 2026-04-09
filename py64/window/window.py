@@ -19,7 +19,7 @@ class Window:
         pygame.mouse.set_visible(False)
         self.width = pygame.display.Info().current_w
         self.height = pygame.display.Info().current_h
-        self.surface = pygame.display.set_mode((self.width, self.height), flags=pygame.OPENGL | pygame.DOUBLEBUF, vsync=True)
+        pygame.display.set_mode((self.width, self.height), flags=pygame.OPENGL | pygame.DOUBLEBUF, vsync=True)
 
-        self.input = Input(self.game, self.width, self.height)
+        self.input = Input(self.game)
         self.render = Render(self.game)

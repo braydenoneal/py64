@@ -6,12 +6,11 @@ from py64.game.game import Game
 
 
 class Input:
-    def __init__(self, game: Game, width: int, height: int):
+    def __init__(self, game: Game):
         self.game = game
         self.player = game.player
         self.camera = game.camera
-        self.width = width
-        self.height = height
+        self.width, self.height = pygame.display.get_window_size()
         pygame.mouse.set_pos((self.width // 2, self.height // 2))
 
     def set_view_angle(self):
