@@ -90,10 +90,27 @@ class Render:
         self.ctx.disable(moderngl.BLEND)
 
         if self.player_model.animation is not None:
-            if self.player_model.animation.actions != ['gPlayerAnim_link_normal_run_free'] and self.player.running:
-                self.player_model.animation.set_actions(['gPlayerAnim_link_normal_run_free'])
-            elif self.player_model.animation.actions == ['gPlayerAnim_link_normal_run_free'] and not self.player.running:
-                self.player_model.animation.set_actions(['gPlayerAnim_link_normal_walk_endL_free', 'gPlayerAnim_link_normal_wait_free'])
+            anim = self.player_model.animation
+            player = self.player
+            prev = self.player.previous_state
+
+            if prev.grounded:  # was grounded
+                if player.grounded:  # isn't in air
+                    if not prev.running and player.running:  # start run
+                        anim.set_actions(['gPlayerAnim_link_normal_run_free'])
+                    elif prev.running and not player.running:  # end jump
+                        anim.set_actions(['gPlayerAnim_link_normal_walk_endL_free', 'gPlayerAnim_link_normal_wait_free'])
+                else:  # starting jump
+                    if player.running:  # running jump
+                        anim.set_actions(['gPlayerAnim_link_normal_run_jump', 'gPlayerAnim_link_normal_landing_wait'])
+                    else:  # stationary jump
+                        anim.set_actions(['gPlayerAnim_link_normal_jump', 'gPlayerAnim_link_normal_landing_wait'])
+            else:  # was in air
+                if player.grounded:  # landing
+                    if player.running:  # running landing
+                        anim.set_actions(['gPlayerAnim_link_normal_run_jump_end', 'gPlayerAnim_link_normal_run_free'])
+                    else:  # stationary landing
+                        anim.set_actions(['gPlayerAnim_link_normal_landing_free', 'gPlayerAnim_link_normal_wait_free'])
 
         self.player_model.position = self.player.position + vec3(0, -self.player.scale.y, 0)
         self.player_model.rotation = glm.rotate(self.player.looking_y_angle, vec3(0, 1, 0))

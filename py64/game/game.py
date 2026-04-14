@@ -20,6 +20,7 @@ class Game:
         if self.camera.free_cam:
             self.camera.position += self.camera.get_direction()
         else:
+            self.player.set_previous_state()
             self.player.process_jump_vector()
             self.move_player()
             self.camera.snap_to_player()

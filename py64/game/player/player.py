@@ -1,18 +1,27 @@
+from dataclasses import dataclass
+
 from pyglm import glm
 from pyglm.glm import vec3
 
 
+@dataclass
+class PreviousState:
+    grounded: bool
+    running: bool
+
+
 class Player:
     def __init__(self):
-        self.position = vec3(0, 10, 0)
+        self.position = vec3(0, 9.07, 0)
         self.x_angle: float = 0
         self.y_angle: float = 0
         self.looking_y_angle: float = 0
         self.scale = vec3(0.5, 1.5, 0.5)
         self.speed = 0.125
-        self.grounded = False
+        self.grounded = True
         self.jump_vector = vec3(0)
         self.running = False
+        self.previous_state = PreviousState(self.grounded, self.running)
 
         self.movement = {
             'forward': False,
@@ -21,6 +30,10 @@ class Player:
             'right': False,
             'up': False,
         }
+
+    def set_previous_state(self):
+        self.previous_state.grounded = self.grounded
+        self.previous_state.running = self.running
 
     def get_rotation_matrix(self):
         x_rotate = glm.rotate(-self.x_angle, vec3(1, 0, 0))

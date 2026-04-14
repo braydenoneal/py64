@@ -15,10 +15,11 @@ Also developing [n64-blender](https://github.com/braydenoneal/n64-blender) to ma
 - [x] Order-independent transparency
 - [x] Animations
 - [x] Collision debug rendering (transparent ellipsoid model)
+- [x] Fog
 - [;] Gouraud shading
     - [x] Vertex normals
     - [ ] Specular highlights
-- [x] Fog
+- [ ] Data driven animation state transition graph
 - [ ] Skybox
 - [ ] Horizontal blur
 - [ ] Anti-aliasing
@@ -28,7 +29,9 @@ Also developing [n64-blender](https://github.com/braydenoneal/n64-blender) to ma
 - [ ] UI framework (maybe something like HTML with tailwind-like class name styling?)
 - [ ] Level loading and unloading
 - [ ] Sound
+- [ ] Lights
 - [ ] Normal maps, diffuse maps, etc.
+- [ ] Ambient occlusion
 - [ ] Bloom
 - [ ] Shadows
 - [ ] God rays
@@ -52,6 +55,7 @@ Also developing [n64-blender](https://github.com/braydenoneal/n64-blender) to ma
 
 ## Model Exporter Issues
 
+- [ ] Hex colors are gamma corrected to an incorrect RGB value
 - [ ] Exporter texture names sometimes have .001 at the end
     - Maybe use texture.filepath instead, but test for platform-specific forward-slash and backslash differences
 - [ ] Blender linked-libraries are either relative or absolute (neither really works when the file is moved)
