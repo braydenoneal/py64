@@ -12,23 +12,16 @@ Also developing [n64-blender](https://github.com/braydenoneal/n64-blender) to ma
 - [x] Clean up / refactor files
 - [x] Refactor / rewrite collision code
 - [x] Text display
-    - [x] Generate font assets
-    - [x] Move font asset generator into runtime to load into pillow image instead of file
-    - [x] Correct aspect ratio
-    - [x] Different font sizes (implemented screen size, not the font size that gets rasterized)
-    - [x] Text position
-    - [x] Multi-line text
-    - [x] Allow changing text
 - [x] Order-independent transparency
 - [x] Animations
 - [x] Collision debug rendering (transparent ellipsoid model)
 - [;] Gouraud shading
     - [x] Vertex normals
     - [ ] Specular highlights
-- [ ] Fog
+- [x] Fog
+- [ ] Skybox
 - [ ] Horizontal blur
 - [ ] Anti-aliasing
-- [ ] Skybox
 - [ ] Texture scroll
 - [ ] Texture animations
 - [ ] Revisit decoupling frame-rate from physics rate
@@ -40,6 +33,7 @@ Also developing [n64-blender](https://github.com/braydenoneal/n64-blender) to ma
 - [ ] Shadows
 - [ ] God rays
 - [ ] Dynamic lighting
+- [ ] Volumetric fog/lighting
 
 ## Issues
 
@@ -58,7 +52,6 @@ Also developing [n64-blender](https://github.com/braydenoneal/n64-blender) to ma
 
 ## Model Exporter Issues
 
-- [ ] Exporter missing some faces on wall_bottom_half for some reason
 - [ ] Exporter texture names sometimes have .001 at the end
     - Maybe use texture.filepath instead, but test for platform-specific forward-slash and backslash differences
 - [ ] Blender linked-libraries are either relative or absolute (neither really works when the file is moved)

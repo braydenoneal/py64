@@ -109,6 +109,9 @@ void main() {
         out_color.a = round(out_color.a);
     }
 
+    float fog_factor = clamp(exp(-0.0125 * (gl_FragCoord.z / gl_FragCoord.w)), 0.0, 1.0);
+    out_color.rgb = mix(vec3(0.7843, 0.7843, 0.5882), out_color.rgb, fog_factor);
+
     float d = 1.0 - (gl_FragCoord.z / gl_FragCoord.w / 1000.0);
 
     if (pass == 0) {

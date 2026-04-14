@@ -64,8 +64,10 @@ class Render:
         )
 
         self.forest = Model(self.ctx, self.program, '../assets/models/forest.json', vec3(42))
-        self.player_model = Model(self.ctx, self.program, '../assets/models/player.json', vec3(0.19))
+        self.player_model = Model(self.ctx, self.program, '../assets/models/link.json', vec3(0.45))
         self.ellipsoid = Model(self.ctx, self.program, '../assets/models/ellipsoid.json', self.player.scale)
+
+        self.player_model.animation.actions = ['gPlayerAnim_link_normal_wait_free']
 
         self.models = [
             self.forest,
@@ -87,16 +89,20 @@ class Render:
         self.ctx.enable(moderngl.CULL_FACE)
         self.ctx.disable(moderngl.BLEND)
 
-        self.player_model.animation.action = 'Run' if self.player.running else 'Idle'
+        if self.player_model.animation is not None:
+            if self.player_model.animation.actions != ['gPlayerAnim_link_normal_run_free'] and self.player.running:
+                self.player_model.animation.set_actions(['gPlayerAnim_link_normal_run_free'])
+            elif self.player_model.animation.actions == ['gPlayerAnim_link_normal_run_free'] and not self.player.running:
+                self.player_model.animation.set_actions(['gPlayerAnim_link_normal_walk_endL_free', 'gPlayerAnim_link_normal_wait_free'])
 
-        self.player_model.position = self.player.position + vec3(0, -1.5, 0)
+        self.player_model.position = self.player.position + vec3(0, -self.player.scale.y, 0)
         self.player_model.rotation = glm.rotate(self.player.looking_y_angle, vec3(0, 1, 0))
 
         self.ellipsoid.position = vec3(self.player.position)
 
         for index, fbo in enumerate(self.fbo_list):
             fbo.use()
-            self.ctx.clear()
+            self.ctx.clear(0.7843, 0.7843, 0.5882)
 
             self.program['pass'] = index if index < 2 else 2
 

@@ -38,6 +38,10 @@ class Material:
         textures_root = '../assets/textures/'
 
         path = f'{textures_root}{name}'
+
+        if path.endswith('.001'):
+            path = path[:-4]
+
         path = path if os.path.isfile(path) else f'{textures_root}missing.png'
 
         image = Image.open(path).convert('RGBA').transpose(Transpose.FLIP_TOP_BOTTOM)
@@ -154,6 +158,6 @@ class Material:
 
         if 'overlay_color' in self.material_dict.keys():
             overlay_color = self.material_dict['overlay_color']
-            self.program['overlay_color'] = vec3(*overlay_color)
+            self.program['overlay_color'] = vec3(*overlay_color) * 2.25
 
         self.vao.render()

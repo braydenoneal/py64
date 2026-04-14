@@ -7,7 +7,7 @@ import moderngl
 from moderngl import Context
 from pyglm.glm import vec3, mat3x3, mat4x4
 
-from py64.window.render.model.animation.bone.bone import Bone, Keyframe
+from py64.window.render.model.animation.bone.bone import Bone, Keyframe, TRANSITION
 
 
 class Animation:
@@ -35,7 +35,7 @@ class Animation:
             keyframes: dict[str, list[Keyframe]] = {}
             self.action_lengths: dict[str, float] = {}
 
-            self.action: str = next(iter(bone_dict['frames']))
+            self.actions: list[str] = [next(iter(bone_dict['frames']))]
 
             for action, frames in bone_dict['frames'].items():
                 keyframes[action] = []
@@ -51,11 +51,13 @@ class Animation:
                     if frame['frame'] > self.action_lengths[action]:
                         self.action_lengths[action] = frame['frame']
 
-            self.bones.append(Bone(name, head, tail, parent, keyframes))
+            self.bones.append(Bone(name, head, tail, parent, keyframes, Keyframe(0, mat3x3(1), vec3(0)), Keyframe(0, mat3x3(1), vec3(0))))
 
         self.bone_matrices: list[mat4x4] = []
         self.bone_matrices_bytes: bytes = b''
-        self.set_bone_matrices(0, self.action)
+        self.set_bone_matrices(0, self.actions[0])
+        self.transition = False
+        self.prev_action = self.actions[0]
 
         self.program = self.ctx.program(
             vertex_shader=open('../assets/shaders/armature/vertex.glsl', 'r').read(),
@@ -68,16 +70,42 @@ class Animation:
             (self.vbo, '4f', 'in_vertex'),
         ])
 
-    def step(self):
-        self.frame += 1
-        self.frame %= self.action_lengths[self.action]
-        self.set_bone_matrices(self.frame, self.action)
+    def set_actions(self, actions: list[str]):
+        self.prev_action = self.actions[0]
+        self.transition = True
+        self.actions = actions
+        self.frame = 0
 
-    def set_bone_matrices(self, frame: float, action: str):
+    def step(self):
+        self.frame += .5
+
+        if self.transition:
+            self.set_bone_matrices(self.frame, self.prev_action, self.actions[0])
+
+            if self.frame > TRANSITION:
+                self.transition = False
+                self.frame = 0
+
+            return
+
+        if len(self.actions) == 1:
+            self.frame %= self.action_lengths[self.actions[0]]
+            self.set_bone_matrices(self.frame, self.actions[0])
+        else:
+            if self.frame >= self.action_lengths[self.actions[0]] + TRANSITION:
+                self.actions.pop(0)
+                self.frame = 0
+                self.set_bone_matrices(self.frame, self.actions[0])
+            elif self.frame >= self.action_lengths[self.actions[0]]:
+                self.set_bone_matrices(self.frame - self.action_lengths[self.actions[0]], self.actions[0], self.actions[1])
+            else:
+                self.set_bone_matrices(self.frame, self.actions[0])
+
+    def set_bone_matrices(self, frame: float, action: str, next_action: str | None = None):
         bone_matrices: list[mat4x4] = []
 
         for bone in self.bones:
-            bone_matrices.append(bone.get_matrix(frame, action))
+            bone_matrices.append(bone.get_matrix(frame, action, next_action))
 
         for i in range(len(bone_matrices), 100):
             bone_matrices.append(mat4x4(1))
