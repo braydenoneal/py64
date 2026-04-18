@@ -37,6 +37,9 @@ Also developing [n64-blender](https://github.com/braydenoneal/n64-blender) to ma
 - [ ] God rays
 - [ ] Dynamic lighting
 - [ ] Volumetric fog/lighting
+- [ ] Depth of field
+- [ ] PBR?
+- [ ] Environment maps
 
 ## Issues
 
