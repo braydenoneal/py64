@@ -40,6 +40,8 @@ Also developing [n64-blender](https://github.com/braydenoneal/n64-blender) to ma
 - [ ] Depth of field
 - [ ] PBR?
 - [ ] Environment maps
+- [ ] Reflection
+- [ ] Emission
 
 ## Issues
 
