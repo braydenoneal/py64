@@ -39,8 +39,26 @@ class Material:
 
         path = f'{textures_root}{name}'
 
-        if path.endswith('.001'):
-            path = path[:-4]
+        if not path.endswith('.png'):
+            segments = path.split('.')
+
+            if not segments[-1].startswith('tlut'):
+                path = '.'.join(segments[:-1])
+
+        if os.path.isfile(path + '0_TLUT.png'):
+            path += '0_TLUT.png'
+
+        elif os.path.isfile(path + '8_TLUT.png'):
+            path += '8_TLUT.png'
+
+        elif os.path.isfile(path + '_TLUT.png'):
+            path += '_TLUT.png'
+
+        elif os.path.isfile(path + 'TLUT.png'):
+            path += 'TLUT.png'
+
+        elif os.path.isfile(path + '.png'):
+            path += '.png'
 
         path = path if os.path.isfile(path) else f'{textures_root}missing.png'
 

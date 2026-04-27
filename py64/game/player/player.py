@@ -12,7 +12,7 @@ class PreviousState:
 
 class Player:
     def __init__(self):
-        self.position = vec3(0, 9.07, 0)
+        self.position = vec3(0, 19.07, 10)
         self.x_angle: float = 0
         self.y_angle: float = 0
         self.looking_y_angle: float = 0
