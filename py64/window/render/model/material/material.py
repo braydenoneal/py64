@@ -60,6 +60,9 @@ class Material:
         elif os.path.isfile(path + '.png'):
             path += '.png'
 
+        elif os.path.isfile(path + '.bmp'):
+            path += '.bmp'
+
         path = path if os.path.isfile(path) else f'{textures_root}missing.png'
 
         image = Image.open(path).convert('RGBA').transpose(Transpose.FLIP_TOP_BOTTOM)

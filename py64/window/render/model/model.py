@@ -67,7 +67,7 @@ class Model:
 
         if self.animation is not None and self.render_armature:
             self.ctx.disable(moderngl.DEPTH_TEST)
-            self.animation.render_armature(camera_matrix)
+            self.animation.render_armature(camera_matrix * glm.translate(self.position) * self.rotation)
             self.ctx.enable(moderngl.DEPTH_TEST)
 
     def render_transparent(self, camera_matrix: mat4x4):

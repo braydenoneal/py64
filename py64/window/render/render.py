@@ -7,6 +7,7 @@ from moderngl import Framebuffer
 from pyglm import glm
 from pyglm.glm import vec3
 
+from py64.game.collision.collider.collider_render import ColliderRender
 from py64.game.game import Game
 from py64.window.render.model.model import Model
 from py64.window.render.text.text import Text
@@ -63,17 +64,22 @@ class Render:
             fragment_shader=open('../assets/shaders/main/fragment.glsl', 'r').read(),
         )
 
-        self.forest = Model(self.ctx, self.program, '../assets/models/temple.json', vec3(.32))
+        # self.forest = Model(self.ctx, self.program, '../assets/models/forest.json', vec3(42))
+        self.forest = Model(self.ctx, self.program, '../assets/models/temple.json', vec3(0.32))
         self.player_model = Model(self.ctx, self.program, '../assets/models/link.json', vec3(0.45))
         self.ellipsoid = Model(self.ctx, self.program, '../assets/models/ellipsoid.json', self.player.scale)
+        self.collider = ColliderRender(self.ctx, self.game.forest)
 
         self.player_model.animation.actions = ['gPlayerAnim_link_normal_wait_free']
 
         self.models = [
             self.forest,
             self.player_model,
+            # self.collider,
             # self.ellipsoid,
         ]
+
+        # self.player_model.render_armature = True
 
         self.text = Text(self.ctx, 0, 0)
 
@@ -119,7 +125,8 @@ class Render:
 
         for index, fbo in enumerate(self.fbo_list):
             fbo.use()
-            self.ctx.clear(0.7843, 0.7843, 0.5882)
+            # self.ctx.clear(0.7843, 0.7843, 0.5882)
+            self.ctx.clear()
 
             self.program['pass'] = index if index < 2 else 2
 

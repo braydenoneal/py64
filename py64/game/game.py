@@ -9,7 +9,8 @@ class Game:
     def __init__(self):
         self.player = Player()
         self.camera = Camera(self.player)
-        self.forest = Collider('../assets/models/temple.json', vec3(.32))
+        # self.forest = Collider('../assets/models/forest.json', vec3(42))
+        self.forest = Collider('../assets/models/temple.json', vec3(0.32))
 
     def move_player(self):
         self.player.grounded = False

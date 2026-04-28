@@ -16,7 +16,29 @@ def vertex_in_cell(vertex: vec3, pos: vec3, size: vec3) -> bool:
 
 
 def face_intersects_cell(face: Face, pos: vec3, size: vec3) -> bool:
-    return any(vertex_in_cell(getattr(face, i), pos, size) for i in ('a', 'b', 'c'))
+    min_x: float = face.a.x
+    max_x: float = face.a.x
+    min_y: float = face.a.y
+    max_y: float = face.a.y
+    min_z: float = face.a.z
+    max_z: float = face.a.z
+
+    for vertex in (face.b, face.c):
+        min_x = min(min_x, vertex.x)
+        max_x = max(max_x, vertex.x)
+        min_y = min(min_y, vertex.y)
+        max_y = max(max_y, vertex.y)
+        min_z = min(min_z, vertex.z)
+        max_z = max(max_z, vertex.z)
+
+    face_pos = vec3(min_x, min_y, min_z)
+    face_size = vec3(max_x - min_x, max_y - min_y, max_z - min_z)
+
+    for i in range(3):
+        if face_pos[i] > pos[i] + size[i] or face_pos[i] + face_size[i] < pos[i]:
+            return False
+
+    return True
 
 
 @dataclass
@@ -65,38 +87,12 @@ class Collider:
                 max_z = max(max_z, vertex.z)
 
         pos = vec3(min_x, min_y, min_z)
-        size = vec3(max_x - min_x, max_y - min_y, max_z - min_z)
+        self.size = vec3(max_x - min_x, max_y - min_y, max_z - min_z)
 
-        root = Cell(0, pos, list(range(len(self.collision_faces))), [])
-        self.build_octree(root, size)
+        self.root = Cell(0, pos, list(range(len(self.collision_faces))), [])
+        self.build_octree(self.root, self.size)
 
-        # self.x_cell_start = math.floor(min_x / CELL_SIZE)
-        # self.x_cell_end = math.ceil(max_x / CELL_SIZE)
-        # self.y_cell_start = math.floor(min_y / CELL_SIZE)
-        # self.y_cell_end = math.ceil(max_y / CELL_SIZE)
-        # self.z_cell_start = math.floor(min_z / CELL_SIZE)
-        # self.z_cell_end = math.ceil(max_z / CELL_SIZE)
-        #
-        # self.grid: list[list[list[list[int]]]] = []
-
-        # for x in range(self.x_cell_start, self.x_cell_end + 1):
-        #     y_list: list[list[list[int]]] = []
-        #
-        #     for y in range(self.y_cell_start, self.y_cell_end + 1):
-        #         z_list: list[list[int]] = []
-        #
-        #         for z in range(self.z_cell_start, self.z_cell_end + 1):
-        #             faces: list[int] = []
-        #
-        #             for index, face in enumerate(self.collision_faces):
-        #                 if face_intersects_cell(face, x, y, z):
-        #                     faces.append(index)
-        #
-        #             z_list.append(faces)
-        #
-        #         y_list.append(z_list)
-        #
-        #     self.grid.append(y_list)
+        self.cells: list[tuple[Cell, vec3]] = []
 
     def build_octree(self, parent: Cell, size: vec3, depth: int = 0):
         for octant in range(8):
@@ -110,58 +106,46 @@ class Collider:
             if len(face_indices) > 0:
                 parent.children.append(Cell(octant, pos, face_indices, []))
 
-        if depth > 4:
+        if depth > 2:
             return
 
         for child in parent.children:
             self.build_octree(child, size / 2, depth + 1)
 
-    def slide_and_collide(self, player: Player, position: vec3, velocity: vec3, gravity: bool = False, iterations: int = 0) -> vec3:
-        # cell_position = position / ((1 / player.scale) * CELL_SIZE)
-        # cell_x = math.floor(cell_position.x)
-        # cell_y = math.floor(cell_position.y)
-        # cell_z = math.floor(cell_position.z)
-        #
-        # faces: list[int] = []
-        #
-        # for x in range(cell_x - 1, cell_x + 2):
-        #     if x < self.x_cell_start or x >= self.x_cell_end:
-        #         continue
-        #
-        #     for y in range(cell_y - 1, cell_y + 2):
-        #         if y < self.y_cell_start or y >= self.y_cell_end:
-        #             continue
-        #
-        #         for z in range(cell_z - 1, cell_z + 2):
-        #             if z < self.z_cell_start or z >= self.z_cell_end:
-        #                 continue
-        #
-        #             cell_faces = self.grid[x - self.x_cell_start][y - self.y_cell_start][z - self.z_cell_start]
-        #
-        #             for cell_face in cell_faces:
-        #                 if cell_face not in faces:
-        #                     faces.append(cell_face)
+    def traverse_octree_wide(self, pos: vec3) -> list[int]:
+        faces = []
 
+        for x in range(-1, 2):
+            for y in range(-1, 2):
+                for z in range(-1, 2):
+                    faces += list(set(self.traverse_octree(pos + vec3(x, y, z) * 4, self.root, self.size)) - set(faces))
+
+        return faces
+
+    def traverse_octree(self, pos: vec3, parent: Cell, size: vec3) -> list[int]:
+        for child in parent.children:
+            if vertex_in_cell(pos, child.pos, size / 2):
+                return self.traverse_octree(pos, child, size / 2)
+
+        self.cells.append((parent, size))
+        return parent.face_indices
+
+    def slide_and_collide(self, player: Player, position: vec3, velocity: vec3, gravity: bool = False, iterations: int = 0) -> vec3:
         if iterations > 5 or velocity == vec3(0):
             return position
 
         minimum_distance = 0.005
         collisions: list[Intersect] = []
 
+        self.cells = []
         # Get all collisions
-        for face in self.collision_faces:
-            # for face_index in faces:
-            #     face = self.collision_faces[face_index]
+        for face_index in self.traverse_octree_wide(position * player.scale):
+            face = self.collision_faces[face_index]
             # Convert vertices and normal to ellipsoid space
             a = face.a / player.scale
             b = face.b / player.scale
             c = face.c / player.scale
             normal = glm.normalize(glm.cross(b - a, c - a))
-            center = face.center / player.scale
-            radius = glm.distance(center, face.corner / player.scale)
-
-            if glm.distance(position, center) > radius:
-                continue
 
             collision = Face(a, b, c, normal, face.one_sided).get_intersect(position, velocity)
 

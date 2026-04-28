@@ -123,35 +123,6 @@ class Face:
     normal: vec3
     one_sided: bool
 
-    def __post_init__(self):
-        ax = self.a.x
-        bx = self.b.x
-        cx = self.c.x
-
-        ay = self.a.y
-        by = self.b.y
-        cy = self.c.y
-
-        az = self.a.z
-        bz = self.b.z
-        cz = self.c.z
-
-        x_max = (ax if ax > cx else cx) if ax > bx else (bx if bx > cx else cx)
-        y_max = (ay if ay > cy else cy) if ay > by else (by if by > cy else cy)
-        z_max = (az if az > cz else cz) if az > bz else (bz if bz > cz else cz)
-
-        x_min = (ax if ax < cx else cx) if ax < bx else (bx if bx < cx else cx)
-        y_min = (ay if ay < cy else cy) if ay < by else (by if by < cy else cy)
-        z_min = (az if az < cz else cz) if az < bz else (bz if bz < cz else cz)
-
-        center_x = x_min + (x_max - x_min) / 2
-        center_y = y_min + (y_max - y_min) / 2
-        center_z = z_min + (z_max - z_min) / 2
-
-        self.center = vec3(center_x, center_y, center_z)
-        self.corner = vec3(x_max, y_max, z_max)
-        self.radius = glm.distance(self.center, self.corner)
-
     def is_point_inside(self, point: vec3) -> bool:
         # Nearest to plane
         distance = (point - self.a) @ self.normal

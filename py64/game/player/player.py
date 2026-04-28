@@ -84,6 +84,6 @@ class Player:
                 self.jump_vector = vec3(0)
 
     def jump(self):
-        if self.grounded:
-            self.movement['up'] = True
-            self.jump_vector = vec3(0, 0.5, 0)
+        # if self.grounded:
+        self.movement['up'] = True
+        self.jump_vector = vec3(0, 0.5, 0)
