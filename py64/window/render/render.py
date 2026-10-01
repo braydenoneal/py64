@@ -64,8 +64,8 @@ class Render:
             fragment_shader=open('../assets/shaders/main/fragment.glsl', 'r').read(),
         )
 
-        # self.forest = Model(self.ctx, self.program, '../assets/models/forest.json', vec3(42))
-        self.forest = Model(self.ctx, self.program, '../assets/models/temple.json', vec3(0.32))
+        self.forest = Model(self.ctx, self.program, '../assets/models/forest.json', vec3(42))
+        # self.forest = Model(self.ctx, self.program, '../assets/models/temple.json', vec3(0.32))
         self.player_model = Model(self.ctx, self.program, '../assets/models/link.json', vec3(0.45))
         self.ellipsoid = Model(self.ctx, self.program, '../assets/models/ellipsoid.json', self.player.scale)
         self.collider = ColliderRender(self.ctx, self.game.forest)
@@ -125,8 +125,7 @@ class Render:
 
         for index, fbo in enumerate(self.fbo_list):
             fbo.use()
-            # self.ctx.clear(0.7843, 0.7843, 0.5882)
-            self.ctx.clear()
+            self.ctx.clear(0.7843, 0.7843, 0.5882)
 
             self.program['pass'] = index if index < 2 else 2
 
@@ -164,7 +163,7 @@ class Render:
         self.text.text = '\n'.join(str(round(v, 2)) for v in self.player.position.to_list())
         self.text.text += f'\nFPS: {round(self.clock.get_fps(), 2)}'
         self.text.update()
-        self.text.render()
+        # self.text.render()
 
         self.clock.tick(60)
         pygame.display.flip()

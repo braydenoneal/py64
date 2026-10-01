@@ -4,6 +4,10 @@ A game engine loosely based on the Nintendo 64 using [moderngl](https://github.c
 
 Also developing [n64-blender](https://github.com/braydenoneal/n64-blender) to make and export a custom model format for the engine.
 
+![thumbnail.png](thumbnail.png)
+
+![gameplay.gif](gameplay.gif)
+
 ## Todo
 
 - [x] Merge collision
