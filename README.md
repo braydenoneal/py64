@@ -5,8 +5,8 @@ A game engine loosely based on the Nintendo 64 using [moderngl](https://github.c
 Also developing [n64-blender](https://github.com/braydenoneal/n64-blender) to make and export a custom model format for the engine.
 
 ![thumbnail.png](thumbnail.png)
-[gameplay.mp4](gameplay.mp4)
-![gameplay.gif](gameplay.gif)
+
+https://github.com/user-attachments/assets/7f0073cc-03a1-46fa-89fd-c17f26d43157
 
 ## Todo
 
